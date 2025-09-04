@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Tienda Online{% endblock %}</title>
+    <!-- Agregamos el CDN de Tailwind para usar sus clases de diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans antialiased flex flex-col items-center justify-center min-h-screen">
+
+    <!-- Bloque para mostrar los mensajes de Django -->
+    {% if messages %}
+        <ul class="messages list-none p-0 mb-4 w-full max-w-sm">
+            {% for message in messages %}
+                <li class="{{ message.tags }} bg-red-500 text-white p-3 rounded-lg text-center font-medium shadow-md my-2">
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <!-- Fin del bloque de mensajes -->
+
+    <div class="container mx-auto p-4">
+        {% block content %}
+        <!-- El contenido específico de cada página irá aquí -->
+        {% endblock %}
+    </div>
+
+</body>
+</html>
