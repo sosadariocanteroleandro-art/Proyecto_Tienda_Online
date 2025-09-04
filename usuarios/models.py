@@ -72,6 +72,13 @@ class Producto(models.Model):
     # cuando se crea el objeto por primera vez.
     fecha_creacion = models.DateTimeField(default=timezone.now)
 
+    TIPO_PRODUCTO = [
+        ('FISICO', 'Fisico'),
+        ('DIGITAL', 'Digital')
+    ]
+    tipo_producto = models.CharField(max_length=10, choices=TIPO_PRODUCTO, default='FISICO')
+
+
     class Meta:
         # Nombre singular del modelo en el panel de administración
         verbose_name = "Producto"
