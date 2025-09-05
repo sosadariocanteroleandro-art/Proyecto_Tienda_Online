@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Producto
 
+admin.site.register(Producto)
+
 class ProductoAdmin(admin.ModelAdmin):
     #campos que se mostraran en la lista del admin
     list_display = ('nombre', 'precio', 'tipo producto', 'stock')

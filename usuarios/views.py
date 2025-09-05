@@ -3,7 +3,6 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomUserCreationForm
-from .models import Producto
 
 
 def registro_usuario(request):
@@ -13,8 +12,7 @@ def registro_usuario(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Redirige al usuario al login después de un registro exitoso
+            form.save()
             return redirect('usuarios:login')
     else:
         form = CustomUserCreationForm()
@@ -31,28 +29,14 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('usuarios:home')
+            return redirect('usuarios:home')  # Esto puede cambiar después según la app de productos
         else:
             messages.error(request, 'Nombre de usuario o contraseña incorrectos.')
-            form = AuthenticationForm(request.POST)  # ← Formulario con datos previos
+            form = AuthenticationForm(request.POST)
     else:
-        form = AuthenticationForm()  # ← Formulario vacío para GET
+        form = AuthenticationForm()
 
-    return render(request, 'usuarios/login.html', {'form': form})  # ← ¡PASA EL FORMULARIO!
-
-
-def home(request):
-    """
-    Vista de la página principal que muestra los productos.
-    """
-    # Obtenemos todos los productos de la base de datos
-    productos = Producto.objects.all()
-
-    # Pasamos los productos al contexto de la plantilla
-    context = {
-        'productos': productos
-    }
-    return render(request, 'usuarios/home.html', context)
+    return render(request, 'usuarios/login.html', {'form': form})
 
 
 def logout_view(request):
@@ -60,4 +44,4 @@ def logout_view(request):
     Vista para cerrar la sesión.
     """
     logout(request)
-    return redirect('usuarios:login')  # ← Cambiado a 'usuarios:login'
+    return redirect('usuarios:login')

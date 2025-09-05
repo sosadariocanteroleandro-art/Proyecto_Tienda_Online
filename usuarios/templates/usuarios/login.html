@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
-    <!-- Tailwind CSS para un diseño limpio y responsivo -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -22,7 +22,7 @@
         .form-input {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #d1d5db !important;
+            border: 2px solid #d1d5db;
             border-radius: 8px;
             transition: all 0.3s ease;
             background-color: #ffffff;
@@ -30,15 +30,14 @@
         }
 
         .form-input:focus {
-            outline: none !important;
-            border-color: #3b82f6 !important;
+            outline: none;
+            border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .submit-btn {
             background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
             transition: all 0.3s ease;
-            transform: translateY(0);
         }
 
         .submit-btn:hover {
@@ -52,7 +51,6 @@
             font-size: 12px;
             margin-top: 4px;
         }
-
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
@@ -62,7 +60,7 @@
             <p class="text-gray-600">Accede a tu cuenta para continuar</p>
         </div>
 
-        <!-- Mostrar mensajes de Django (por ejemplo, después de un registro exitoso) -->
+        <!-- Mensajes de Django -->
         {% if messages %}
             {% for message in messages %}
                 <div class="mb-4 p-3 rounded-lg {% if message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% else %}bg-red-100 border border-red-400 text-red-700{% endif %}">
@@ -80,55 +78,42 @@
             </div>
         {% endif %}
 
-        <!-- CAMBIO CRÍTICO: action corregido -->
+        <!-- Formulario de login -->
         <form method="post" action="{% url 'usuarios:login' %}" class="space-y-6">
             {% csrf_token %}
 
-            <!-- Campo de nombre de usuario -->
+            <!-- Usuario -->
             <div>
-                <label for="{{ form.username.id_for_label }}" class="block text-gray-700 text-sm font-semibold mb-2">
-                    Usuario  <!-- Texto mejorado -->
-                </label>
-                <input type="text"
-                       name="username"
-                       id="id_username"
-                       class="form-input"
-                       placeholder="Ingresa tu usuario"
-                       required>
+                <label for="id_username" class="block text-gray-700 text-sm font-semibold mb-2">Usuario</label>
+                {{ form.username }}
                 {% for error in form.username.errors %}
                     <div class="error-message">{{ error }}</div>
                 {% endfor %}
             </div>
 
-            <!-- Campo de contraseña -->
+            <!-- Contraseña -->
             <div>
-                <label for="{{ form.password.id_for_label }}" class="block text-gray-700 text-sm font-semibold mb-2">
-                    Contraseña  <!-- Texto mejorado -->
-                </label>
-                <input type="password"
-                       name="password"
-                       id="id_password"
-                       class="form-input"
-                       placeholder="Ingresa tu contraseña"
-                       required>
+                <label for="id_password" class="block text-gray-700 text-sm font-semibold mb-2">Contraseña</label>
+                {{ form.password }}
                 {% for error in form.password.errors %}
                     <div class="error-message">{{ error }}</div>
                 {% endfor %}
             </div>
 
-            <!-- Botón de envío -->
-            <button
-                type="submit"
-                class="submit-btn w-full text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-300">
+            <!-- Botón -->
+            <button type="submit" class="submit-btn w-full text-white font-semibold py-3 px-4 rounded-lg focus:outline-none focus:ring">
                 Iniciar Sesión
             </button>
         </form>
 
-        <!-- Enlace a la página de registro -->
+        <!-- Enlace a registro -->
         <div class="mt-6 text-center">
-            <a href="{% url 'usuarios:registro_usuario' %}" class="inline-block font-semibold text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200">
-                ¿No tienes una cuenta? Regístrate
-            </a>
+            <p class="text-sm text-gray-600">
+                ¿No tienes una cuenta?
+                <a href="{% url 'usuarios:registro' %}" class="font-semibold text-blue-600 hover:text-blue-800 transition-colors duration-200">
+                    Regístrate
+                </a>
+            </p>
         </div>
     </div>
 </body>

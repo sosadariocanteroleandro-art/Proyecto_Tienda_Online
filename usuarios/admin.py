@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Producto  # ← Agrega Producto aquí
 from django.utils.translation import gettext_lazy as _
+from .models import CustomUser
+
 
 
 # Registra tu modelo CustomUser en el admin
@@ -36,21 +37,3 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ('date_joined', 'last_login')
 
 
-# 🚨 AÑADE ESTO PARA REGISTRAR EL MODELO PRODUCTO
-@admin.register(Producto)
-class ProductoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'precio', 'stock', 'fecha_creacion')
-    list_filter = ('fecha_creacion', 'stock')
-    search_fields = ('nombre', 'descripcion')
-    ordering = ('-fecha_creacion',)
-    list_editable = ('precio', 'stock')  # Puedes editar directamente en la lista
-
-    # Campos para el formulario
-    fieldsets = (
-        (None, {
-            'fields': ('nombre', 'descripcion')
-        }),
-        ('Precio e Inventario', {
-            'fields': ('precio', 'stock', 'imagen')
-        }),
-    )

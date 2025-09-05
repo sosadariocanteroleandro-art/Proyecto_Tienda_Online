@@ -4,14 +4,14 @@ from .models import Producto
 
 def home_tienda(request):
     """
-    Esta vista renderiza la página principal de la Tienda,
-    separando los productos físicos de los digitales.
+    Vista para la página principal de la tienda,
+    separando productos físicos y digitales.
     """
-    # Filtramos los productos para obtener solo los físicos.
+    # Obtenemos los productos físicos y digitales
     productos_fisicos = Producto.objects.filter(tipo_producto='FISICO')
-    # Filtramos los productos para obtener solo los digitales.
     productos_digitales = Producto.objects.filter(tipo_producto='DIGITAL')
 
+    # Pasamos los productos al contexto de la plantilla
     context = {
         'productos_fisicos': productos_fisicos,
         'productos_digitales': productos_digitales

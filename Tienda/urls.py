@@ -2,15 +2,12 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    # Incluye las URLs de la aplicación 'usuarios' en la raíz del proyecto.
-    path('', include('usuarios.urls')),
-
-    # Ahora también incluimos las URLs de la aplicación de productos
-    path('productos/', include('productos.urls')),
-
-    # Y las URLs de la aplicación de afiliados
-    path('afiliados/', include('afiliados.urls')),
-
-    # Ruta para el panel de administración de Django
+    # Panel de administración
     path('admin/', admin.site.urls),
+
+    # URLs de la app usuarios
+    path('', include('usuarios.urls')),  # La página principal y login/registro se manejan aquí
+
+    # URLs de la app productos
+    path('productos/', include('productos.urls')),  # Aquí se manejarán los productos físicos y digitales
 ]
