@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, inicial-scale=1.0">
+    <title>Afiliarme</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto py-10">
+        {% if messages %}
+  <div class="mb-4">
+    {% for message in messages %}
+      <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+        <h1 class="text-3xl font-bold text-center mb-8">Afiliarte a un producto</h1>
+
+        <!-- Productos fisicos -->
+        {% for producto in productos_fisicos %}
+        <h2 class ="text-2xl font semibold mb-4">Productos Fisicos</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover mb-4"
+                      onerror   ="this.src='https://placehold.co/600x400/cccccc/fff?text={{ producto.nombre|slice:':20' }}'">
+                <h3 class="text-xl font-semibold">{{producto.nombre }}</h3>
+                <p class="text-gray-600">Precio: {{producto.precio}}</p>
+                <p class="text-gray-500">{{producto.descripcion}}</p>
+                <a href="{% url 'productos:afiliar_producto' producto.id %}"
+                    class="mt-4 w-full block bg-blue-600 text-white py-2 px-4 rounded text-center hover:bg-blue-800">
+                    Afiliarse
+                </a>
+            </div>
+            {% empty %}
+            <p>No hay productos fisicos disponibles </p>
+            {% endfor %}
+        </div>
+
+        <!--Productos digitales -->
+        <h2 class="text-2xl font semibold mb-4">Productos Digitales</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {% for producto in productos_digitales %}
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover mb-4"
+                      onerror   ="this.src='https://placehold.co/600x400/cccccc/fff?text={{ producto.nombre|slice:':20' }}'">
+                <h3 class="text-xl font-semibold">{{producto.nombre}}</h3>
+                <p class="text-gray-600">Precio {{producto.precio}}</p>
+                <p class="text-gray-500">{{ producto.descripcion }}</p>
+                <a href="{% url 'productos:afiliar_producto' producto.id %}"
+                    class="mt-4 w-full block bg-green-600 text-white py-2 px-4 rounded text-center hover:bg-green-800">
+                    Afiliarse
+                </a>
+            </div>
+            {% empty %}
+            <p> No hay productos digitales disponibles </p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>

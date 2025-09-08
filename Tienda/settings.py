@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
+
     # Tus aplicaciones personalizadas
     'usuarios',
     'productos',
@@ -43,7 +45,7 @@ ROOT_URLCONF = 'Tienda.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/"templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -106,3 +108,7 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 # ✅ Para evitar problemas de cache en desarrollo
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 semanas en segundos
+
+# ✅ Configuración para @login_required
+LOGIN_URL = '/usuarios/login/'  # Ajusta según la URL de tu login
+LOGIN_REDIRECT_URL = '/productos/mis-productos/'  # Redirige a "Mis Productos" tras login

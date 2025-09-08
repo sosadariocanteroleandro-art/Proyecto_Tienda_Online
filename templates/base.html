@@ -1,13 +1,16 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mi Tienda Online{% endblock %}</title>
-    <!-- Agregamos el CDN de Tailwind para usar sus clases de diseño -->
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
 <body class="bg-gray-100 font-sans antialiased flex flex-col items-center justify-center min-h-screen">
+
+    <!-- Menú de navegación -->
+    <nav class="w-full bg-white shadow-md p-4 mb-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{% url 'productos:home' %}" class="text-xl font-bold text-gray-800">Mi Tienda</a>
+            <div class="space-x-4">
+                <a href="{% url 'productos:home' %}" class="text-gray-700 hover:text-gray-900">Inicio</a>
+                <a href="{% url 'productos:afiliarme' %}" class="text-gray-700 hover:text-gray-900">Afiliarse</a>
+                <a href="{% url 'productos:mis_productos' %}" class="text-gray-700 hover:text-gray-900">Mis Productos</a>
+            </div>
+        </div>
+    </nav>
 
     <!-- Bloque para mostrar los mensajes de Django -->
     {% if messages %}
@@ -19,13 +22,10 @@
             {% endfor %}
         </ul>
     {% endif %}
-    <!-- Fin del bloque de mensajes -->
 
     <div class="container mx-auto p-4">
         {% block content %}
-        <!-- El contenido específico de cada página irá aquí -->
         {% endblock %}
     </div>
 
 </body>
-</html>

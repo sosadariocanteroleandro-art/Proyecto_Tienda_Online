@@ -1,4 +1,8 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.conf import settings
+
+from Tienda.settings import AUTH_USER_MODEL
 
 
 class Producto(models.Model):
@@ -12,6 +16,7 @@ class Producto(models.Model):
     precio = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio")
     descripcion = models.TextField(verbose_name="Descripción")
     imagen = models.URLField(max_length=500, verbose_name="URL de Imagen", null=True, blank=True)
+    afiliados = models.ManyToManyField(AUTH_USER_MODEL, related_name='productos_afiliados', blank=True)
     # Nuevo campo para clasificar el producto
     tipo_producto = models.CharField(
         max_length=7,
