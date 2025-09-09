@@ -5,9 +5,9 @@ urlpatterns = [
     # Panel de administración
     path('admin/', admin.site.urls),
 
-    # URLs de la app usuarios
-    path('', include('usuarios.urls')),  # La página principal y login/registro se manejan aquí
-
     # URLs de la app productos
-    path('productos/', include('productos.urls')),  # Aquí se manejarán los productos físicos y digitales
+    path('productos/', include('productos.urls')),
+
+    # URLs de la app usuarios (debe ir al final para no interferir)
+    path('', include('usuarios.urls')),  # La página principal y login/registro se manejan aquí
 ]

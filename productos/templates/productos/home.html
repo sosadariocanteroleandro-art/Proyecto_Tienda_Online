@@ -56,6 +56,38 @@
         .nav-gradient {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+        /* Estilos para la funcionalidad de búsqueda */
+        .producto-hidden {
+            display: none !important;
+        }
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 1rem;
+            margin: 1rem 0;
+        }
+        .no-results.visible {
+            display: block;
+        }
+        .search-highlight {
+            background-color: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #92400e;
+        }
+        .search-counter {
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body class="min-h-screen relative">
@@ -72,13 +104,13 @@
                 </button>
             </div>
             <nav class="space-y-3">
-                <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
                     <span class="font-medium">Inicio</span>
                 </a>
-                <a href="#" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
                     <span class="font-medium">Mis Productos</span>
                 </a>
-                <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 trancition duration-300 group">
+                <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
                     <span class="font-medium">Afiliarme</span>
                 </a>
                 <form action="{% url 'usuarios:logout' %}" method="post" class="mt-3">
@@ -97,13 +129,23 @@
             <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300">☰</button>
             <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
             <div class="hidden md:flex items-center space-x-4">
-                <input type="search" placeholder="Buscar productos..." class="search-input pl-10 pr-4 py-2 rounded-full w-64 focus:outline-none">
+                <div class="relative">
+                    <input type="search" id="searchInput" placeholder="Buscar productos..." class="search-input pl-10 pr-4 py-2 rounded-full w-64 focus:outline-none">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                        🔍
+                    </div>
+                    <!-- Contador de resultados -->
+                    <div id="searchCounter" class="search-counter absolute -top-2 -right-2 hidden">
+                        <span id="resultCount">0</span> encontrados
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
 
     <!-- Contenido -->
     <main class="pt-24 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
+        <!-- Header con información de búsqueda -->
         <div class="text-center mb-12">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
                 Descubre Productos Increíbles
@@ -113,45 +155,88 @@
                 ¡Hola, <span class="font-semibold text-blue-600">{{ request.user.username }}</span>! Tenemos las mejores ofertas para ti.
             </p>
             {% endif %}
+
+            <!-- Mensaje de búsqueda activa (oculto por defecto) -->
+            <div id="searchInfo" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 max-w-md mx-auto mb-6">
+                <p class="text-blue-800 font-medium">
+                    🔍 Resultados para: "<span id="searchTerm" class="font-bold"></span>"
+                </p>
+                <button onclick="clearSearch()" class="text-blue-600 underline text-sm mt-2 hover:text-blue-800">
+                    Limpiar búsqueda
+                </button>
+            </div>
         </div>
 
         <!-- Productos Físicos -->
-        <h2 class="text-2xl font-bold mb-6">Productos Físicos</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {% for producto in productos_fisicos %}
-            <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group">
-                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover">
-                <div class="p-5">
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">{{ producto.nombre }}</h3>
-                    <p class="text-gray-600 text-sm mb-4">{{ producto.descripcion }}</p>
-                    <span class="text-2xl font-bold text-blue-600">₲{{ producto.precio|intcomma }}</span>
+        <div id="seccion-fisicos">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Productos Físicos</h2>
+                <span id="fisicos-count" class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                    {{ productos_fisicos|length }} producto{{ productos_fisicos|length|pluralize }}
+                </span>
+            </div>
+            <div id="fisicos-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                {% for producto in productos_fisicos %}
+                <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group" data-type="fisico" data-name="{{ producto.nombre|lower }}" data-description="{{ producto.descripcion|lower }}">
+                    <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover">
+                    <div class="p-5">
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">{{ producto.nombre }}</h3>
+                        <p class="text-gray-600 text-sm mb-4">{{ producto.descripcion }}</p>
+                        <span class="text-2xl font-bold text-blue-600">₲{{ producto.precio|intcomma }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-8">
+                    <p class="text-gray-500">No hay productos físicos disponibles.</p>
+                </div>
+                {% endfor %}
+
+                <!-- Mensaje de sin resultados para físicos -->
+                <div id="no-results-fisicos" class="no-results">
+                    <div class="text-4xl mb-4">📦</div>
+                    <p class="text-lg font-semibold">No se encontraron productos físicos</p>
+                    <p class="text-sm mt-2">Intenta con otros términos de búsqueda</p>
                 </div>
             </div>
-            {% empty %}
-            <p>No hay productos físicos disponibles.</p>
-            {% endfor %}
         </div>
 
         <!-- Productos Digitales -->
-        <h2 class="text-2xl font-bold mb-6">Productos Digitales</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {% for producto in productos_digitales %}
-            <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group">
-                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover">
-                <div class="p-5">
-                    <h3 class="font-bold text-lg text-gray-800 mb-2">{{ producto.nombre }}</h3>
-                    <p class="text-gray-600 text-sm mb-4">{{ producto.descripcion }}</p>
-                    <span class="text-2xl font-bold text-blue-600">₲{{ producto.precio|intcomma }}</span>
+        <div id="seccion-digitales">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold">Productos Digitales</h2>
+                <span id="digitales-count" class="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                    {{ productos_digitales|length }} producto{{ productos_digitales|length|pluralize }}
+                </span>
+            </div>
+            <div id="digitales-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for producto in productos_digitales %}
+                <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group" data-type="digital" data-name="{{ producto.nombre|lower }}" data-description="{{ producto.descripcion|lower }}">
+                    <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover">
+                    <div class="p-5">
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">{{ producto.nombre }}</h3>
+                        <p class="text-gray-600 text-sm mb-4">{{ producto.descripcion }}</p>
+                        <span class="text-2xl font-bold text-blue-600">₲{{ producto.precio|intcomma }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-8">
+                    <p class="text-gray-500">No hay productos digitales disponibles.</p>
+                </div>
+                {% endfor %}
+
+                <!-- Mensaje de sin resultados para digitales -->
+                <div id="no-results-digitales" class="no-results">
+                    <div class="text-4xl mb-4">💻</div>
+                    <p class="text-lg font-semibold">No se encontraron productos digitales</p>
+                    <p class="text-sm mt-2">Intenta con otros términos de búsqueda</p>
                 </div>
             </div>
-            {% empty %}
-            <p>No hay productos digitales disponibles.</p>
-            {% endfor %}
         </div>
     </main>
 
     <!-- Scripts -->
     <script>
+        // Funcionalidad del sidebar
         const openMenuBtn = document.getElementById('open-menu');
         const closeMenuBtn = document.getElementById('close-menu');
         const sidebar = document.getElementById('sidebar');
@@ -166,6 +251,137 @@
         openMenuBtn.addEventListener('click', toggleSidebar);
         closeMenuBtn.addEventListener('click', toggleSidebar);
         overlay.addEventListener('click', toggleSidebar);
+
+        // Funcionalidad de búsqueda
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchCounter = document.getElementById('searchCounter');
+            const resultCount = document.getElementById('resultCount');
+            const searchInfo = document.getElementById('searchInfo');
+            const searchTerm = document.getElementById('searchTerm');
+            const fisicosCount = document.getElementById('fisicos-count');
+            const digitalesCount = document.getElementById('digitales-count');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTermValue = e.target.value.toLowerCase().trim();
+
+                    // Obtener todos los productos
+                    const allProducts = document.querySelectorAll('.product-card[data-name]');
+                    let visibleCount = 0;
+                    let fisicosVisible = 0;
+                    let digitalesVisible = 0;
+
+                    if (searchTermValue === '') {
+                        // Si no hay término de búsqueda, mostrar todos los productos
+                        allProducts.forEach(product => {
+                            product.classList.remove('producto-hidden');
+                            removeHighlight(product);
+
+                            // Contar productos por tipo
+                            if (product.dataset.type === 'fisico') {
+                                fisicosVisible++;
+                            } else if (product.dataset.type === 'digital') {
+                                digitalesVisible++;
+                            }
+                        });
+
+                        // Ocultar contador y mensaje de búsqueda
+                        searchCounter.classList.add('hidden');
+                        searchInfo.classList.add('hidden');
+
+                        // Ocultar mensajes de sin resultados
+                        document.getElementById('no-results-fisicos').classList.remove('visible');
+                        document.getElementById('no-results-digitales').classList.remove('visible');
+
+                        visibleCount = allProducts.length;
+                    } else {
+                        // Filtrar productos según el término de búsqueda
+                        allProducts.forEach(product => {
+                            const productName = product.dataset.name;
+                            const productDesc = product.dataset.description || '';
+
+                            if (productName.includes(searchTermValue) || productDesc.includes(searchTermValue)) {
+                                product.classList.remove('producto-hidden');
+                                highlightSearchTerm(product, searchTermValue);
+                                visibleCount++;
+
+                                // Contar por tipo
+                                if (product.dataset.type === 'fisico') {
+                                    fisicosVisible++;
+                                } else if (product.dataset.type === 'digital') {
+                                    digitalesVisible++;
+                                }
+                            } else {
+                                product.classList.add('producto-hidden');
+                                removeHighlight(product);
+                            }
+                        });
+
+                        // Mostrar contador de resultados
+                        resultCount.textContent = visibleCount;
+                        searchCounter.classList.toggle('hidden', visibleCount === 0);
+
+                        // Mostrar información de búsqueda
+                        searchTerm.textContent = searchTermValue;
+                        searchInfo.classList.remove('hidden');
+
+                        // Mostrar/ocultar mensajes de sin resultados
+                        document.getElementById('no-results-fisicos').classList.toggle('visible', fisicosVisible === 0);
+                        document.getElementById('no-results-digitales').classList.toggle('visible', digitalesVisible === 0);
+                    }
+
+                    // Actualizar contadores por tipo
+                    fisicosCount.textContent = `${fisicosVisible} producto${fisicosVisible !== 1 ? 's' : ''}`;
+                    digitalesCount.textContent = `${digitalesVisible} producto${digitalesVisible !== 1 ? 's' : ''}`;
+                });
+
+                // Limpiar búsqueda con Escape
+                searchInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        clearSearch();
+                    }
+                });
+            }
+        });
+
+        // Función para limpiar la búsqueda
+        function clearSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.dispatchEvent(new Event('input'));
+                searchInput.blur();
+            }
+        }
+
+        // Función para destacar términos de búsqueda
+        function highlightSearchTerm(product, searchTerm) {
+            const title = product.querySelector('h3');
+            const description = product.querySelector('p');
+
+            [title, description].forEach(element => {
+                if (element) {
+                    let content = element.textContent;
+                    // Remover highlights previos
+                    element.innerHTML = content;
+
+                    // Agregar nuevo highlight si hay coincidencia
+                    if (content.toLowerCase().includes(searchTerm)) {
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        element.innerHTML = content.replace(regex, '<span class="search-highlight">$1</span>');
+                    }
+                }
+            });
+        }
+
+        // Función para remover destacado
+        function removeHighlight(product) {
+            const highlighted = product.querySelectorAll('.search-highlight');
+            highlighted.forEach(el => {
+                el.outerHTML = el.innerHTML;
+            });
+        }
     </script>
 </body>
 </html>

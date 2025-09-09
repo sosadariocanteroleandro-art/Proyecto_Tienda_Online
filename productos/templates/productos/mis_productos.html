@@ -1,25 +1,348 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Productos - Tu Tienda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .product-card {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .nav-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar {
+            width: 0;
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar.open {
+            width: 280px;
+            transform: translateX(0);
+        }
+        .overlay {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .overlay.visible {
+            display: block;
+        }
+        .empty-state {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+        }
+        .badge {
+            background: linear-gradient(45deg, #10b981, #059669);
+        }
+        .desafiliar-btn {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            transition: all 0.3s ease;
+        }
+        .desafiliar-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+    <!-- Overlay -->
+    <div id="overlay" class="overlay fixed inset-0 z-40 hidden"></div>
 
-{% block title %}Mis Productos{% endblock %}
-
-{% block content %}
-<div class="container mx-auto py-10">
-    <h1 class="text-3xl font-bold text-center mb-8">Mis Productos Afiliados</h1>
-
-    {% if productos %}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {% for producto in productos %}
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover mb-4"
-                     onerror="this.src='https://placehold.co/600x400/cccccc/fff?text={{ producto.nombre|slice:':20' }}'">
-                <h3 class="text-xl font-semibold">{{ producto.nombre }}</h3>
-                <p class="text-gray-600">Precio: {{ producto.precio }}</p>
-                <p class="text-gray-500">{{ producto.descripcion }}</p>
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full shadow-xl z-50 overflow-y-auto text-white">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-8">
+                <span class="text-xl font-bold">Menú Principal</span>
+                <button id="close-menu" class="text-white hover:text-gray-200 transition duration-300">
+                    ✖
+                </button>
             </div>
-            {% endfor %}
+            <nav class="space-y-3">
+                <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">Inicio</span>
+                </a>
+                <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">Mis Productos</span>
+                </a>
+                <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">Afiliarme</span>
+                </a>
+                <form action="{% url 'usuarios:logout' %}" method="post" class="mt-3">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
         </div>
-    {% else %}
-        <p class="text-center text-gray-600">No te has afiliado a ningún producto aún.</p>
-    {% endif %}
-</div>
-{% endblock %}
+    </div>
+
+    <!-- Navbar -->
+    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12 fixed top-0 w-full z-50">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300">☰</button>
+            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
+            <div class="hidden md:flex items-center space-x-4">
+                <span class="text-white font-medium">Mis Productos</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="pt-24 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                📦 Mis Productos Afiliados
+            </h1>
+            <p class="text-lg text-gray-600">
+                {% if productos %}
+                    Tienes <span class="font-bold text-blue-600">{{ productos|length }}</span> producto{{ productos|length|pluralize }} afiliado{{ productos|length|pluralize }}
+                {% else %}
+                    Aún no te has afiliado a ningún producto
+                {% endif %}
+            </p>
+        </div>
+
+        {% if productos %}
+            <!-- Filtros -->
+            <div class="glass-card rounded-2xl p-6 mb-8 shadow-lg">
+                <div class="flex flex-wrap gap-4 items-center justify-between">
+                    <div class="flex gap-2">
+                        <button onclick="filterProducts('all')" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-blue-600">
+                            Todos ({{ productos|length }})
+                        </button>
+                        <button onclick="filterProducts('FISICO')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
+                            Físicos
+                        </button>
+                        <button onclick="filterProducts('DIGITAL')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
+                            Digitales
+                        </button>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Buscar productos..." class="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <!-- Productos Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productsGrid">
+                {% for producto in productos %}
+                <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group product-item" data-type="{{ producto.tipo_producto }}" data-name="{{ producto.nombre|lower }}">
+                    <!-- Badge de tipo de producto -->
+                    <div class="relative">
+                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                             onerror="this.src='https://placehold.co/600x400/667eea/fff?text={{ producto.nombre|slice:':3' }}'">
+                        <div class="absolute top-3 right-3">
+                            {% if producto.tipo_producto == 'FISICO' %}
+                            <span class="badge text-white text-xs font-bold px-3 py-1 rounded-full">📦 Físico</span>
+                            {% else %}
+                            <span class="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">💻 Digital</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="p-5">
+                        <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-600 transition duration-300">
+                            {{ producto.nombre }}
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion }}</p>
+                        
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
+                            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Afiliado ✓</span>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="flex gap-2">
+                            <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105">
+                                Ver Detalles
+                            </button>
+                            <form method="post" action="#" class="inline-block">
+                                {% csrf_token %}
+                                <button type="button" onclick="desafiliar({{ producto.id }}, '{{ producto.nombre }}')" 
+                                        class="desafiliar-btn text-white font-semibold py-2 px-3 rounded-lg">
+                                    🗑️
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="glass-card rounded-2xl p-6 mt-12 shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Resumen de Afiliaciones</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center p-4 bg-blue-50 rounded-xl">
+                        <div class="text-3xl font-bold text-blue-600">{{ productos|length }}</div>
+                        <div class="text-gray-600">Total de Productos</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-xl">
+                        <div class="text-3xl font-bold text-green-600">
+                            {% widthratio productos|length 1 100 %}%
+                        </div>
+                        <div class="text-gray-600">Tasa de Conversión</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-xl">
+                        <div class="text-3xl font-bold text-purple-600">
+                            ₲{% widthratio productos|length 1 1000000 %}M+
+                        </div>
+                        <div class="text-gray-600">Potencial de Ganancias</div>
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Estado vacío -->
+            <div class="empty-state rounded-3xl p-12 text-center shadow-lg">
+                <div class="text-6xl mb-6">🛒</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">¡Aún no tienes productos afiliados!</h2>
+                <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                    Comienza a generar ingresos afiliándote a nuestros increíbles productos. 
+                    Es fácil y completamente gratis.
+                </p>
+                <a href="{% url 'productos:afiliarme' %}" 
+                   class="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    🚀 Comenzar Ahora
+                </a>
+            </div>
+        {% endif %}
+    </main>
+
+    <!-- Modal de confirmación para desafiliar -->
+    <div id="desafiliarModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+            <div class="text-center">
+                <div class="text-4xl mb-4">⚠️</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">¿Confirmar desafiliación?</h3>
+                <p class="text-gray-600 mb-6">¿Estás seguro de que quieres desafiliarte de <span id="productoNombre" class="font-semibold"></span>?</p>
+                <div class="flex gap-3">
+                    <button onclick="cerrarModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-400 transition duration-300">
+                        Cancelar
+                    </button>
+                    <button id="confirmarDesafiliar" class="flex-1 bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600 transition duration-300">
+                        Desafiliar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Sidebar functionality
+        const openMenuBtn = document.getElementById('open-menu');
+        const closeMenuBtn = document.getElementById('close-menu');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        openMenuBtn.addEventListener('click', toggleSidebar);
+        closeMenuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        // Filter functionality
+        function filterProducts(type) {
+            const products = document.querySelectorAll('.product-item');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            
+            // Update button styles
+            filterBtns.forEach(btn => {
+                btn.classList.remove('bg-blue-500', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('bg-blue-500', 'text-white');
+            
+            // Filter products
+            products.forEach(product => {
+                if (type === 'all' || product.dataset.type === type) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const products = document.querySelectorAll('.product-item');
+            
+            products.forEach(product => {
+                const productName = product.dataset.name;
+                if (productName.includes(searchTerm)) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+        });
+
+        // Modal functionality
+        let productoADesafiliar = null;
+
+        function desafiliar(productoId, productoNombre) {
+            productoADesafiliar = productoId;
+            document.getElementById('productoNombre').textContent = productoNombre;
+            document.getElementById('desafiliarModal').classList.remove('hidden');
+            document.getElementById('desafiliarModal').classList.add('flex');
+        }
+
+        function cerrarModal() {
+            document.getElementById('desafiliarModal').classList.add('hidden');
+            document.getElementById('desafiliarModal').classList.remove('flex');
+            productoADesafiliar = null;
+        }
+
+        document.getElementById('confirmarDesafiliar').addEventListener('click', function() {
+            if (productoADesafiliar) {
+                // Crear y enviar formulario de desafiliación
+                const form = document.querySelector(`form[action*="desafiliar-producto/${productoADesafiliar}"]`);
+                if (form) {
+                    form.submit();
+                } else {
+                    // Fallback: crear formulario dinámicamente
+                    const newForm = document.createElement('form');
+                    newForm.method = 'post';
+                    newForm.action = `/productos/desafiliar-producto/${productoADesafiliar}/`;
+
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = csrfToken;
+
+                    newForm.appendChild(csrfInput);
+                    document.body.appendChild(newForm);
+                    newForm.submit();
+                }
+                cerrarModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -9,4 +9,5 @@ urlpatterns = [
     path('afiliarme/', views.afiliarme, name='afiliarme'),
     path('mis-productos/', views.mis_productos, name='mis_productos'),
     path('afiliar-producto/<int:producto_id>/', views.afiliar_producto, name='afiliar_producto'),
+    path('desafiliar-producto/<int:producto_id>/', views.desafiliar_producto, name='desafiliar_producto'),
 ]
