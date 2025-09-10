@@ -1,2 +1,4 @@
-# Ignorar configuraciones de PyCharm
-.idea/
+# .gitignore
+.env
+*.env
+.env.local

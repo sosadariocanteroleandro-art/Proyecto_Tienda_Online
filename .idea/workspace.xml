@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tienda/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tienda/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tienda/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tienda/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/templates/usuarios/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/templates/usuarios/registro.html" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/registro.html" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/.env" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/Tienda/admin.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/Tienda/settings.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/productos/admin.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/productos/urls.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/productos/views.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/usuarios/admin.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/usuarios/forms.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/usuarios/models.py" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/usuarios/templates/usuarios/login.html" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/usuarios/templates/usuarios/registro.html" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/usuarios/views.py" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="31e5LrjNNWoQSw0bJi5ETHq46A2" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.app.executor&quot;: &quot;Run&quot;,
+    &quot;Python.usuarios.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/PycharmProjects/Tienda&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-4c141bd692a7-e2d783800521-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-251.26927.90" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="" />
+      <created>1755871644955</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1755871644955</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

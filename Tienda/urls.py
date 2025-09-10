@@ -5,6 +5,9 @@ urlpatterns = [
     # Panel de administración
     path('admin/', admin.site.urls),
 
+    # URLs de allauth (¡ESENCIALES!)
+    path('accounts/', include('allauth.urls')),  # ← ¡AGREGA ESTA LÍNEA!
+
     # URLs de la app productos
     path('productos/', include('productos.urls')),
 
