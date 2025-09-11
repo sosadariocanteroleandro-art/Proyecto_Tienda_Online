@@ -141,6 +141,21 @@ SOCIALACCOUNT_PROVIDERS = {
             'client_id': os.getenv('GOOGLE_OAUTH_CLIENT_ID', ''),
             'secret': os.getenv('GOOGLE_OAUTH_CLIENT_SECRET', ''),
             'key': ''
-        }
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+            'prompt': 'select_account',  # Saltar vista simple y mostrar selector de cuentas
+        },
+        'OAUTH_PKCE_ENABLED': True,
+        'FETCH_USERINFO': True,
     }
 }
+
+# Configuraciones adicionales para mejor UX (agregar después de SOCIALACCOUNT_PROVIDERS)
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Login automático al callback de Google
+SOCIALACCOUNT_AUTO_SIGNUP = True   # No mostrar formulario adicional de registro
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Evitar paso extra de verificación de email
