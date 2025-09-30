@@ -15,8 +15,8 @@ load_dotenv()  # Esta línea carga las variables del archivo .env
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
-SECRET_KEY = 'django-insecure-@e^z*1n_&x&!1n1(b%d)r1g@3k2!+7t_p&s*a-m*g-t$8i1a!f'
-DEBUG = True
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = []
 
 # Application definition
@@ -77,11 +77,11 @@ WSGI_APPLICATION = 'Tienda.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Pagina',
-        'USER': 'postgres',
-        'PASSWORD': 'leandro3218k',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'Pagina'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 

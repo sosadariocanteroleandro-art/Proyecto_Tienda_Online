@@ -1,4 +1,40 @@
-# .gitignore
+# Archivos de entorno
 .env
 *.env
 .env.local
+.env.*.local
+
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+/media/
+/staticfiles/
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Base de datos
+*.db
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
