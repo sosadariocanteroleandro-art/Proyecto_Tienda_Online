@@ -226,7 +226,7 @@
                 {% for producto in productos_fisicos %}
                 <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group producto-item" data-name="{{ producto.nombre|lower }}">
                     <div class="relative">
-                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
                              onerror="this.src='https://placehold.co/600x400/3b82f6/fff?text={{ producto.nombre|slice:':3' }}'">
                         <div class="absolute top-3 right-3">
                             <span class="badge-fisico text-white text-xs font-bold px-3 py-1 rounded-full">📦 Físico</span>
@@ -260,11 +260,14 @@
                             </div>
                         </div>
 
-                        <a href="{% url 'productos:afiliar_producto' producto.id %}"
-                           onclick="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')"
-                           class="affiliate-btn-fisico mt-4 w-full block text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
-                            🚀 Afiliarme Ahora
-                        </a>
+                        <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post"
+                              onsubmit="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="affiliate-btn-fisico mt-4 w-full text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
+                                🚀 Afiliarme Ahora
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% endfor %}
@@ -297,7 +300,7 @@
                 {% for producto in productos_digitales %}
                 <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group producto-item" data-name="{{ producto.nombre|lower }}">
                     <div class="relative">
-                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
                              onerror="this.src='https://placehold.co/600x400/10b981/fff?text={{ producto.nombre|slice:':3' }}'">
                         <div class="absolute top-3 right-3">
                             <span class="badge-digital text-white text-xs font-bold px-3 py-1 rounded-full">💻 Digital</span>
@@ -331,11 +334,14 @@
                             </div>
                         </div>
 
-                        <a href="{% url 'productos:afiliar_producto' producto.id %}"
-                           onclick="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')"
-                           class="affiliate-btn-digital mt-4 w-full block text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
-                            💎 Afiliarme Ahora
-                        </a>
+                        <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post"
+                              onsubmit="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="affiliate-btn-digital mt-4 w-full text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
+                                💎 Afiliarme Ahora
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% endfor %}

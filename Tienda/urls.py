@@ -1,5 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
+# AGREGAR ESTAS IMPORTACIONES:
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     # Panel de administración
@@ -14,3 +17,7 @@ urlpatterns = [
     # URLs de la app usuarios (debe ir al final para no interferir)
     path('', include('usuarios.urls')),  # La página principal y login/registro se manejan aquí
 ]
+
+# ✅ CONFIGURACIÓN PARA ARCHIVOS MEDIA (IMÁGENES)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

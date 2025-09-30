@@ -100,8 +100,14 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 
-# Static files
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]  # ← NUEVA LÍNEA
+
+# Media files (Archivos subidos por usuarios)  # ← NUEVA SECCIÓN
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ✅ CONFIGURACIONES PERSONALIZADAS CRÍTICAS
