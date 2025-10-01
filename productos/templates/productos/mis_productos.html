@@ -77,20 +77,38 @@
             </div>
             <nav class="space-y-3">
                 <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">Inicio</span>
+                    <span class="font-medium">🏠 Inicio</span>
                 </a>
                 <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">Mis Productos</span>
+                    <span class="font-medium">📦 Mis Productos</span>
                 </a>
                 <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">Afiliarme</span>
+                    <span class="font-medium">🤝 Afiliarme</span>
                 </a>
-                <form action="{% url 'usuarios:logout' %}" method="post" class="mt-3">
-                    {% csrf_token %}
-                    <button type="submit" class="bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
-                        Cerrar Sesión
-                    </button>
-                </form>
+
+                {% if request.user.is_authenticated %}
+                <a href="{% url 'productos:crear_producto' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">💼 Volverse Vendedor</span>
+                </a>
+                {% endif %}
+
+                <div class="mt-6 pt-6 border-t border-white border-opacity-30">
+                    {% if request.user.is_authenticated %}
+                        <div class="mb-4 text-sm text-gray-200">
+                            👤 {{ request.user.username }}
+                        </div>
+                        <form action="{% url 'usuarios:logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
+                                🚪 Cerrar Sesión
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'usuarios:login' %}" class="block w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300 text-center">
+                            🔐 Iniciar Sesión
+                        </a>
+                    {% endif %}
+                </div>
             </nav>
         </div>
     </div>
@@ -113,22 +131,36 @@
             <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
                 📦 Mis Productos Afiliados
             </h1>
-            <p class="text-lg text-gray-600">
-                {% if productos %}
-                    Tienes <span class="font-bold text-blue-600">{{ productos|length }}</span> producto{{ productos|length|pluralize }} afiliado{{ productos|length|pluralize }}
+            <p class="text-lg text-gray-600 mb-6">
+                {% if productos_afiliados %}
+                    Tienes <span class="font-bold text-blue-600">{{ productos_afiliados|length }}</span> producto{{ productos_afiliados|length|pluralize }} afiliado{{ productos_afiliados|length|pluralize }}
                 {% else %}
                     Aún no te has afiliado a ningún producto
                 {% endif %}
             </p>
+
+            <!-- Botón para Gestionar Links -->
+            {% if tiene_perfil %}
+            <a href="{% url 'productos:mis_links_afiliado' %}"
+               class="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                🔗 Ver Mis Links de Afiliado
+            </a>
+            {% elif productos_afiliados %}
+            <a href="{% url 'productos:crear_perfil_vendedor' %}"
+               class="inline-block bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                ✨ Crear Mi Perfil de Afiliado
+            </a>
+            <p class="text-sm text-gray-500 mt-3">Crea tu perfil para obtener links únicos y ganar comisiones</p>
+            {% endif %}
         </div>
 
-        {% if productos %}
+        {% if productos_afiliados %}
             <!-- Filtros -->
             <div class="glass-card rounded-2xl p-6 mb-8 shadow-lg">
                 <div class="flex flex-wrap gap-4 items-center justify-between">
                     <div class="flex gap-2">
                         <button onclick="filterProducts('all')" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-blue-600">
-                            Todos ({{ productos|length }})
+                            Todos ({{ productos_afiliados|length }})
                         </button>
                         <button onclick="filterProducts('FISICO')" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
                             Físicos
@@ -143,11 +175,11 @@
 
             <!-- Productos Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productsGrid">
-                {% for producto in productos %}
+                {% for producto in productos_afiliados %}
                 <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group product-item" data-type="{{ producto.tipo_producto }}" data-name="{{ producto.nombre|lower }}">
                     <!-- Badge de tipo de producto -->
                     <div class="relative">
-                        <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
                              onerror="this.src='https://placehold.co/600x400/667eea/fff?text={{ producto.nombre|slice:':3' }}'">
                         <div class="absolute top-3 right-3">
                             {% if producto.tipo_producto == 'FISICO' %}
@@ -163,7 +195,7 @@
                             {{ producto.nombre }}
                         </h3>
                         <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion }}</p>
-                        
+
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
                             <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">Afiliado ✓</span>
@@ -174,9 +206,9 @@
                             <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105">
                                 Ver Detalles
                             </button>
-                            <form method="post" action="#" class="inline-block">
+                            <form method="post" action="{% url 'productos:desafiliar_producto' producto.id %}" class="inline-block">
                                 {% csrf_token %}
-                                <button type="button" onclick="desafiliar({{ producto.id }}, '{{ producto.nombre }}')" 
+                                <button type="button" onclick="desafiliar({{ producto.id }}, '{{ producto.nombre }}')"
                                         class="desafiliar-btn text-white font-semibold py-2 px-3 rounded-lg">
                                     🗑️
                                 </button>
@@ -192,18 +224,18 @@
                 <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Resumen de Afiliaciones</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="text-center p-4 bg-blue-50 rounded-xl">
-                        <div class="text-3xl font-bold text-blue-600">{{ productos|length }}</div>
+                        <div class="text-3xl font-bold text-blue-600">{{ productos_afiliados|length }}</div>
                         <div class="text-gray-600">Total de Productos</div>
                     </div>
                     <div class="text-center p-4 bg-green-50 rounded-xl">
                         <div class="text-3xl font-bold text-green-600">
-                            {% widthratio productos|length 1 100 %}%
+                            {% widthratio productos_afiliados|length 1 100 %}%
                         </div>
                         <div class="text-gray-600">Tasa de Conversión</div>
                     </div>
                     <div class="text-center p-4 bg-purple-50 rounded-xl">
                         <div class="text-3xl font-bold text-purple-600">
-                            ₲{% widthratio productos|length 1 1000000 %}M+
+                            ₲{% widthratio productos_afiliados|length 1 1000000 %}M+
                         </div>
                         <div class="text-gray-600">Potencial de Ganancias</div>
                     </div>
@@ -216,10 +248,10 @@
                 <div class="text-6xl mb-6">🛒</div>
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">¡Aún no tienes productos afiliados!</h2>
                 <p class="text-gray-600 mb-8 max-w-md mx-auto">
-                    Comienza a generar ingresos afiliándote a nuestros increíbles productos. 
+                    Comienza a generar ingresos afiliándote a nuestros increíbles productos.
                     Es fácil y completamente gratis.
                 </p>
-                <a href="{% url 'productos:afiliarme' %}" 
+                <a href="{% url 'productos:afiliarme' %}"
                    class="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
                     🚀 Comenzar Ahora
                 </a>
@@ -268,7 +300,7 @@
         function filterProducts(type) {
             const products = document.querySelectorAll('.product-item');
             const filterBtns = document.querySelectorAll('.filter-btn');
-            
+
             // Update button styles
             filterBtns.forEach(btn => {
                 btn.classList.remove('bg-blue-500', 'text-white');
@@ -276,7 +308,7 @@
             });
             event.target.classList.remove('bg-gray-200', 'text-gray-700');
             event.target.classList.add('bg-blue-500', 'text-white');
-            
+
             // Filter products
             products.forEach(product => {
                 if (type === 'all' || product.dataset.type === type) {
@@ -291,7 +323,7 @@
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
             const products = document.querySelectorAll('.product-item');
-            
+
             products.forEach(product => {
                 const productName = product.dataset.name;
                 if (productName.includes(searchTerm)) {
@@ -321,26 +353,19 @@
         document.getElementById('confirmarDesafiliar').addEventListener('click', function() {
             if (productoADesafiliar) {
                 // Crear y enviar formulario de desafiliación
-                const form = document.querySelector(`form[action*="desafiliar-producto/${productoADesafiliar}"]`);
-                if (form) {
-                    form.submit();
-                } else {
-                    // Fallback: crear formulario dinámicamente
-                    const newForm = document.createElement('form');
-                    newForm.method = 'post';
-                    newForm.action = `/productos/desafiliar-producto/${productoADesafiliar}/`;
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = `/productos/desafiliar-producto/${productoADesafiliar}/`;
 
-                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrfmiddlewaretoken';
-                    csrfInput.value = csrfToken;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
 
-                    newForm.appendChild(csrfInput);
-                    document.body.appendChild(newForm);
-                    newForm.submit();
-                }
-                cerrarModal();
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     </script>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Links de Afiliado - Tu Tienda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar {
+            width: 0;
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar.open {
+            width: 280px;
+            transform: translateX(0);
+        }
+        .overlay {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .overlay.visible {
+            display: block;
+        }
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+    <!-- Overlay -->
+    <div id="overlay" class="overlay fixed inset-0 z-40 hidden"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full shadow-xl z-50 overflow-y-auto text-white">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-8">
+                <span class="text-xl font-bold">Menú Principal</span>
+                <button id="close-menu" class="text-white hover:text-gray-200 transition duration-300">✖</button>
+            </div>
+            <nav class="space-y-3">
+                <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">🏠 Inicio</span>
+                </a>
+                <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">📦 Mis Productos</span>
+                </a>
+                <a href="{% url 'productos:mis_links_afiliado' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">🔗 Mis Links</span>
+                </a>
+                <a href="{% url 'productos:editar_perfil_vendedor' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">⚙️ Mi Perfil</span>
+                </a>
+                <div class="mt-6 pt-6 border-t border-white border-opacity-30">
+                    <div class="mb-4 text-sm text-gray-200">👤 {{ request.user.username }}</div>
+                    <form action="{% url 'usuarios:logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
+                            🚪 Cerrar Sesión
+                        </button>
+                    </form>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12 fixed top-0 w-full z-50">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300">☰</button>
+            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
+            <div class="hidden md:flex items-center space-x-4">
+                <span class="text-white font-medium">Mis Links de Afiliado</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="pt-24 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                🔗 Mis Links de Afiliado
+            </h1>
+            <p class="text-lg text-gray-600 mb-4">
+                Comparte estos links únicos para ganar comisiones
+            </p>
+            <div class="glass-card inline-block px-6 py-3 rounded-full">
+                <span class="text-sm text-gray-600">Tu código de referencia: </span>
+                <span class="font-bold text-blue-600">{{ perfil.slug }}</span>
+            </div>
+        </div>
+
+        <!-- Info importante -->
+        <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-lg shadow-md mb-8">
+            <h3 class="text-lg font-semibold text-blue-900 mb-2">💡 ¿Cómo funciona?</h3>
+            <ul class="text-blue-800 space-y-1 text-sm">
+                <li>✅ Cada producto tiene un link único con tu código de referencia</li>
+                <li>✅ Cuando alguien compra usando tu link, ganas comisión</li>
+                <li>✅ El cliente ve la misma página de producto de siempre</li>
+                <li>✅ Nosotros rastreamos que la venta fue tuya</li>
+            </ul>
+        </div>
+
+        <!-- Productos con Links -->
+        {% if productos_con_link %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for item in productos_con_link %}
+            <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden">
+                <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}" class="w-full h-48 object-cover"
+                     onerror="this.src='https://placehold.co/600x400/667eea/fff?text={{ item.producto.nombre|slice:':3' }}'">
+
+                <div class="p-5">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2">{{ item.producto.nombre }}</h3>
+                    <div class="mb-4">
+                        <span class="text-2xl font-bold text-green-600">₲{{ item.producto.precio|intcomma }}</span>
+                        <span class="text-xs text-gray-500 block mt-1">Comisión: ~₲{{ item.producto.precio|floatformat:0|add:"0"|slice:":-1" }}000</span>
+                    </div>
+
+                    <!-- Link del producto -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-600 font-semibold">Tu link de afiliado:</label>
+                        <div class="flex gap-2 mt-1">
+                            <input type="text" readonly
+                                   value="{{ item.link }}"
+                                   id="link-{{ item.producto.id }}"
+                                   class="flex-1 px-3 py-2 text-xs border-2 border-gray-300 rounded-lg bg-gray-50 truncate">
+                            <button onclick="copyLink('{{ item.link }}', {{ item.producto.id }})"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg transition duration-300">
+                                📋
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="space-y-2">
+                        <a href="{{ item.link }}" target="_blank"
+                           class="block w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                            👁️ Vista Previa
+                        </a>
+                        <button onclick="shareWhatsApp('{{ item.link }}', '{{ item.producto.nombre }}')"
+                                class="w-full bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                            📱 Compartir por WhatsApp
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Estado vacío -->
+        <div class="glass-card rounded-3xl p-12 text-center shadow-lg">
+            <div class="text-6xl mb-6">📦</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">No tienes productos afiliados</h2>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                Primero debes afiliarte a algunos productos para obtener tus links únicos.
+            </p>
+            <a href="{% url 'productos:afiliarme' %}"
+               class="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                🤝 Ver Productos para Afiliarme
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Estadísticas -->
+        <div class="glass-card rounded-2xl p-6 mt-12 shadow-lg">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Resumen</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center p-4 bg-blue-50 rounded-xl">
+                    <div class="text-3xl font-bold text-blue-600">{{ productos_con_link|length }}</div>
+                    <div class="text-gray-600">Productos Activos</div>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-xl">
+                    <div class="text-3xl font-bold text-green-600">0</div>
+                    <div class="text-gray-600">Clicks Totales</div>
+                </div>
+                <div class="text-center p-4 bg-purple-50 rounded-xl">
+                    <div class="text-3xl font-bold text-purple-600">₲0</div>
+                    <div class="text-gray-600">Comisiones Ganadas</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 transition-transform duration-300 z-50">
+        ✅ Link copiado al portapapeles
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const openMenuBtn = document.getElementById('open-menu');
+        const closeMenuBtn = document.getElementById('close-menu');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        openMenuBtn.addEventListener('click', toggleSidebar);
+        closeMenuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', toggleSidebar);
+
+        function copyLink(url, productId) {
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById('toast');
+                toast.style.transform = 'translateY(0)';
+                setTimeout(() => {
+                    toast.style.transform = 'translateY(150%)';
+                }, 3000);
+            });
+        }
+
+        function shareWhatsApp(url, productName) {
+            const message = encodeURIComponent(`¡Mira este producto increíble! ${productName}\n${url}`);
+            window.open(`https://wa.me/?text=${message}`, '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Compra - {{ producto.nombre }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .payment-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .payment-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .payment-option.selected {
+            border: 3px solid #10b981;
+            background: #ecfdf5;
+        }
+        #comprobante-section {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navbar Simple -->
+    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white">🛍️ Tu Tienda</a>
+            <span class="text-white font-medium">Checkout</span>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="py-12 px-4 md:px-12">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center">
+                🛒 Finalizar Compra
+            </h1>
+
+            <form method="post" enctype="multipart/form-data" id="checkout-form">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Columna Izquierda: Formulario -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Datos del Cliente -->
+                        <div class="glass-card rounded-2xl shadow-xl p-6">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Tus Datos</h2>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo *</label>
+                                    <input type="text" name="nombre_cliente" required
+                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                           placeholder="Juan Pérez">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                                        <input type="email" name="email_cliente" required
+                                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                               placeholder="juan@email.com">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono *</label>
+                                        <input type="tel" name="telefono_cliente" required
+                                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                               placeholder="+595 981 234567">
+                                    </div>
+                                </div>
+
+                                {% if producto.tipo_producto == 'FISICO' %}
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Ciudad *</label>
+                                    <input type="text" name="ciudad" required
+                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                           placeholder="Asunción">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección de Entrega *</label>
+                                    <textarea name="direccion_entrega" required rows="3"
+                                              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                              placeholder="Calle, número, barrio, referencias..."></textarea>
+                                </div>
+                                {% endif %}
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Notas adicionales (opcional)</label>
+                                    <textarea name="notas_cliente" rows="2"
+                                              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                              placeholder="Alguna indicación especial..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Método de Pago -->
+                        <div class="glass-card rounded-2xl shadow-xl p-6">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-6">💳 Método de Pago</h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Pago contra entrega -->
+                                <div class="payment-option border-3 border-gray-300 rounded-xl p-4 text-center"
+                                     onclick="selectPayment('CONTRA_ENTREGA', this)">
+                                    <input type="radio" name="metodo_pago" value="CONTRA_ENTREGA" class="hidden" required>
+                                    <div class="text-4xl mb-2">💵</div>
+                                    <div class="font-bold text-gray-800">Contra Entrega</div>
+                                    <div class="text-xs text-gray-600 mt-1">Paga al recibir</div>
+                                </div>
+
+                                <!-- Transferencia -->
+                                <div class="payment-option border-3 border-gray-300 rounded-xl p-4 text-center"
+                                     onclick="selectPayment('TRANSFERENCIA', this)">
+                                    <input type="radio" name="metodo_pago" value="TRANSFERENCIA" class="hidden" required>
+                                    <div class="text-4xl mb-2">🏦</div>
+                                    <div class="font-bold text-gray-800">Transferencia</div>
+                                    <div class="text-xs text-gray-600 mt-1">Sube comprobante</div>
+                                </div>
+
+                                <!-- Tarjeta -->
+                                <div class="payment-option border-3 border-gray-300 rounded-xl p-4 text-center"
+                                     onclick="selectPayment('TARJETA', this)">
+                                    <input type="radio" name="metodo_pago" value="TARJETA" class="hidden" required>
+                                    <div class="text-4xl mb-2">💳</div>
+                                    <div class="font-bold text-gray-800">Tarjeta</div>
+                                    <div class="text-xs text-gray-600 mt-1">Próximamente</div>
+                                </div>
+                            </div>
+
+                            <!-- Sección de transferencia -->
+                            <div id="comprobante-section" class="mt-6 p-4 bg-blue-50 rounded-lg">
+                                <h3 class="font-bold text-gray-800 mb-3">📤 Datos para Transferencia</h3>
+                                <div class="text-sm text-gray-700 space-y-2 mb-4">
+                                    <p><strong>Banco:</strong> Banco Nacional</p>
+                                    <p><strong>Cuenta:</strong> 1234567890</p>
+                                    <p><strong>Titular:</strong> Tu Tienda S.A.</p>
+                                    <p><strong>RUC/CI:</strong> 12345678-9</p>
+                                </div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Subir Comprobante *</label>
+                                <input type="file" name="comprobante_pago" accept="image/*"
+                                       class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                            </div>
+
+                            <!-- Info tarjeta -->
+                            <div id="tarjeta-info" class="mt-6 p-4 bg-yellow-50 rounded-lg hidden">
+                                <p class="text-sm text-yellow-800">
+                                    💡 El pago con tarjeta estará disponible próximamente. Por favor, elige otra opción de pago.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Compra -->
+                        <button type="submit" id="submit-btn"
+                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-xl transition duration-300 transform hover:scale-105">
+                            ✅ Confirmar Pedido
+                        </button>
+                    </div>
+
+                    <!-- Columna Derecha: Resumen -->
+                    <div class="lg:col-span-1">
+                        <div class="glass-card rounded-2xl shadow-xl p-6 sticky top-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">📦 Resumen del Pedido</h2>
+
+                            <div class="mb-4">
+                                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}"
+                                     class="w-full h-48 object-cover rounded-lg"
+                                     onerror="this.src='https://placehold.co/400x400/667eea/fff?text=Producto'">
+                            </div>
+
+                            <h3 class="font-bold text-gray-800 mb-2">{{ producto.nombre }}</h3>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad</label>
+                                <input type="number" name="cantidad" value="1" min="1" max="10"
+                                       id="cantidad-input"
+                                       onchange="updateTotal()"
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg">
+                            </div>
+
+                            <div class="space-y-2 mb-4 pb-4 border-b">
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Precio unitario:</span>
+                                    <span>₲{{ producto.precio|intcomma }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Cantidad:</span>
+                                    <span id="cantidad-display">1</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between text-2xl font-bold text-green-600 mb-4">
+                                <span>Total:</span>
+                                <span id="total-display">₲{{ producto.precio|intcomma }}</span>
+                            </div>
+
+                            {% if vendedor_perfil %}
+                            <div class="text-xs text-gray-500 p-3 bg-purple-50 rounded-lg">
+                                ✨ Recomendado por: <span class="font-semibold">{{ vendedor_perfil.nombre_tienda }}</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-4 text-xs text-gray-500 space-y-1">
+                                <p>✅ Compra 100% segura</p>
+                                <p>✅ Garantía de satisfacción</p>
+                                {% if producto.tipo_producto == 'FISICO' %}
+                                <p>✅ Envío a todo el país</p>
+                                {% else %}
+                                <p>✅ Entrega instantánea</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const precioUnitario = {{ producto.precio }};
+
+        function selectPayment(method, element) {
+            // Remover selección anterior
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // Seleccionar nuevo
+            element.classList.add('selected');
+            element.querySelector('input[type="radio"]').checked = true;
+
+            // Mostrar/ocultar secciones según método
+            const comprobanteSection = document.getElementById('comprobante-section');
+            const tarjetaInfo = document.getElementById('tarjeta-info');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (method === 'TRANSFERENCIA') {
+                comprobanteSection.style.display = 'block';
+                tarjetaInfo.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else if (method === 'TARJETA') {
+                comprobanteSection.style.display = 'none';
+                tarjetaInfo.style.display = 'block';
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                comprobanteSection.style.display = 'none';
+                tarjetaInfo.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function updateTotal() {
+            const cantidad = parseInt(document.getElementById('cantidad-input').value);
+            const total = precioUnitario * cantidad;
+
+            document.getElementById('cantidad-display').textContent = cantidad;
+            document.getElementById('total-display').textContent = '₲' + total.toLocaleString('es-PY');
+        }
+
+        // Validación del formulario
+        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+            const metodoSeleccionado = document.querySelector('input[name="metodo_pago"]:checked');
+
+            if (!metodoSeleccionado) {
+                e.preventDefault();
+                alert('Por favor, selecciona un método de pago');
+                return false;
+            }
+
+            if (metodoSeleccionado.value === 'TARJETA') {
+                e.preventDefault();
+                alert('El pago con tarjeta aún no está disponible. Por favor, elige otra opción.');
+                return false;
+            }
+
+            if (metodoSeleccionado.value === 'TRANSFERENCIA') {
+                const comprobante = document.querySelector('input[name="comprobante_pago"]');
+                if (!comprobante.files.length) {
+                    e.preventDefault();
+                    alert('Por favor, sube el comprobante de pago');
+                    return false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -128,11 +128,9 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 semanas en segundos
 
-# ✅ Configuración para @login_required
-LOGIN_URL = '/usuarios/login/'  # Ajusta según la URL de tu login
+# ✅ Configuración para @login_required - ¡CORREGIDO!
+LOGIN_URL = '/login/'  # ← CAMBIO IMPORTANTE: antes era '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/productos/mis-productos/'  # Redirige a "Mis Productos" tras login
-# settings.py (SÍ se sube a GitHub)
-
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
