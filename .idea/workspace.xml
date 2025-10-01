@@ -5,20 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/confirmacion_pedido.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/crear_pedido.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/crear_perfil_vendedor.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/editar_perfil_vendedor.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/mis_links_afiliado.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Tienda/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tienda/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/afiliarme.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/afiliarme.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/crear_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/crear_producto.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/mis_productos.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/mis_productos.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/productos/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

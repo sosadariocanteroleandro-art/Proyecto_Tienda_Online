@@ -137,27 +137,22 @@ def detalle_producto(request, producto_id):
             vendedor_perfil = PerfilVendedor.objects.get(slug=ref_code, activo=True)
 
             # Verificar que el vendedor esté afiliado al producto
-            if request.user.is_authenticated:
-                if vendedor_perfil.usuario not in producto.afiliados.all():
-                    vendedor_perfil = None
-
-            # Registrar la visita (incrementar vistas del vendedor)
-            if vendedor_perfil:
-                # Aquí podrías crear un modelo Visit para tracking más detallado
-                pass
+            if vendedor_perfil.usuario not in producto.afiliados.all():
+                vendedor_perfil = None
 
         except PerfilVendedor.DoesNotExist:
             vendedor_perfil = None
 
     # Verificar si el usuario actual está afiliado
+    # IMPORTANTE: Solo verificar si el usuario está autenticado
     afiliado = False
     if request.user.is_authenticated:
-        afiliado = producto.afiliados.filter(id=request.user.id).exists()
+        afiliado = request.user in producto.afiliados.all()
 
     context = {
         'producto': producto,
         'afiliado': afiliado,
-        'vendedor_perfil': vendedor_perfil,  # Info del vendedor que refirió
+        'vendedor_perfil': vendedor_perfil,
         'ref_code': ref_code,
     }
 
@@ -269,9 +264,6 @@ def estadisticas_vendedor(request):
 
     perfil = request.user.perfil_vendedor
     productos_afiliados = request.user.productos_afiliados.all()
-
-    # Aquí podrías calcular estadísticas más avanzadas
-    # Por ahora mostramos información básica
 
     context = {
         'perfil': perfil,

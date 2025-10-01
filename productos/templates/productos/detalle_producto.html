@@ -171,18 +171,28 @@
                             Consultar por WhatsApp
                         </a>
 
-                        <!-- Botón de afiliarme (si el usuario está logueado) -->
-                        {% if request.user.is_authenticated and not afiliado %}
-                        <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition duration-300">
-                                🤝 Afiliarme a este Producto
-                            </button>
-                        </form>
-                        {% elif afiliado %}
-                        <div class="w-full bg-green-100 border-2 border-green-500 text-green-700 font-bold py-3 px-8 rounded-xl text-center">
-                            ✅ Ya estás afiliado a este producto
-                        </div>
+                        <!-- Botón de afiliarme (SOLO si está logueado) -->
+                        {% if request.user.is_authenticated %}
+                            {% if afiliado %}
+                                <!-- Usuario YA está afiliado -->
+                                <div class="w-full bg-green-100 border-2 border-green-500 text-green-700 font-bold py-3 px-8 rounded-xl text-center">
+                                    ✅ Ya estás afiliado a este producto
+                                </div>
+                            {% else %}
+                                <!-- Usuario NO está afiliado - mostrar botón -->
+                                <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition duration-300">
+                                        🤝 Afiliarme a este Producto
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <!-- Usuario NO está logueado - opcional: mostrar mensaje -->
+                            <a href="{% url 'usuarios:login' %}?next={{ request.path }}"
+                               class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl text-center block transition duration-300">
+                                🔐 Inicia sesión para afiliarte
+                            </a>
                         {% endif %}
                     </div>
                 </div>
