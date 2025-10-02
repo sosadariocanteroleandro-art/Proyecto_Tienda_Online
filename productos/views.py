@@ -2,13 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Producto, PerfilVendedor, Pedido, ConfiguracionPagos
+from django.db import transaction
+from .models import Producto, Pedido, ItemPedido, ConfiguracionPagos
 from .forms import ProductoForm
-import random
-import string
 
 
 def home_tienda(request):
@@ -51,13 +50,9 @@ def mis_productos(request):
     productos_afiliados = request.user.productos_afiliados.all()
     productos_creados = request.user.productos_creados.all()
 
-    # Verificar si el usuario tiene perfil de vendedor
-    tiene_perfil = hasattr(request.user, 'perfil_vendedor')
-
     context = {
         'productos_afiliados': productos_afiliados,
         'productos_creados': productos_creados,
-        'tiene_perfil': tiene_perfil,
     }
 
     return render(request, 'productos/mis_productos.html', context)
@@ -123,122 +118,67 @@ def crear_producto(request):
 
 def detalle_producto(request, producto_id):
     """
-    Vista de detalle de un producto con sistema de referencia de afiliados
+    Vista de detalle de un producto con sistema de referencia simplificado
     """
     producto = get_object_or_404(Producto, id=producto_id, activo=True)
 
-    # Obtener el parámetro 'ref' de la URL
+    # Obtener el parámetro 'ref' de la URL (username o user_id del afiliado)
     ref_code = request.GET.get('ref', None)
-    vendedor_perfil = None
+    afiliado_referido = None
 
-    # Si hay código de referencia, buscar el vendedor
+    # Si hay código de referencia, buscar el usuario afiliado
     if ref_code:
         try:
-            vendedor_perfil = PerfilVendedor.objects.get(slug=ref_code, activo=True)
+            # Intentar buscar por username
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            afiliado_referido = User.objects.get(username=ref_code)
 
-            # Verificar que el vendedor esté afiliado al producto
-            if vendedor_perfil.usuario not in producto.afiliados.all():
-                vendedor_perfil = None
-
-        except PerfilVendedor.DoesNotExist:
-            vendedor_perfil = None
+            # Verificar que el usuario esté afiliado al producto
+            if afiliado_referido not in producto.afiliados.all():
+                afiliado_referido = None
+        except User.DoesNotExist:
+            # Intentar buscar por ID
+            try:
+                afiliado_referido = User.objects.get(id=ref_code)
+                if afiliado_referido not in producto.afiliados.all():
+                    afiliado_referido = None
+            except (User.DoesNotExist, ValueError):
+                afiliado_referido = None
 
     # Verificar si el usuario actual está afiliado
-    # IMPORTANTE: Solo verificar si el usuario está autenticado
     afiliado = False
     if request.user.is_authenticated:
         afiliado = request.user in producto.afiliados.all()
 
+    # Verificar disponibilidad de stock
+    stock_disponible = producto.tiene_stock()
+
     context = {
         'producto': producto,
         'afiliado': afiliado,
-        'vendedor_perfil': vendedor_perfil,
+        'afiliado_referido': afiliado_referido,
         'ref_code': ref_code,
+        'stock_disponible': stock_disponible,
+        'cantidad_stock': producto.stock if producto.tipo_producto == 'FISICO' else None
     }
 
     return render(request, "productos/detalle_producto.html", context)
 
 
-# ============================================================================
-# 🆕 VISTAS PARA SISTEMA DE AFILIADOS
-# ============================================================================
-
-@login_required
-def crear_perfil_vendedor(request):
-    """
-    Vista para crear el perfil de vendedor por primera vez
-    """
-    # Verificar si ya tiene perfil
-    if hasattr(request.user, 'perfil_vendedor'):
-        messages.info(request, 'Ya tienes un perfil de vendedor. Puedes editarlo.')
-        return redirect('productos:editar_perfil_vendedor')
-
-    if request.method == 'POST':
-        nombre_tienda = request.POST.get('nombre_tienda', f'Tienda de {request.user.username}')
-        descripcion = request.POST.get('descripcion', '¡Bienvenido a mi tienda!')
-        color_tema = request.POST.get('color_tema', '#667eea')
-
-        # Crear el perfil
-        perfil = PerfilVendedor.objects.create(
-            usuario=request.user,
-            nombre_tienda=nombre_tienda,
-            descripcion=descripcion,
-            color_tema=color_tema
-        )
-
-        messages.success(request, f'¡Perfil de vendedor creado! Tu código de referencia es: {perfil.slug}')
-        return redirect('productos:mis_links_afiliado')
-
-    return render(request, 'productos/crear_perfil_vendedor.html')
-
-
-@login_required
-def editar_perfil_vendedor(request):
-    """
-    Vista para editar el perfil de vendedor
-    """
-    perfil = get_object_or_404(PerfilVendedor, usuario=request.user)
-
-    if request.method == 'POST':
-        perfil.nombre_tienda = request.POST.get('nombre_tienda', perfil.nombre_tienda)
-        perfil.descripcion = request.POST.get('descripcion', perfil.descripcion)
-        perfil.color_tema = request.POST.get('color_tema', '#667eea')
-
-        # Manejar imágenes
-        if request.FILES.get('foto_perfil'):
-            perfil.foto_perfil = request.FILES['foto_perfil']
-        if request.FILES.get('banner'):
-            perfil.banner = request.FILES['banner']
-
-        perfil.save()
-        messages.success(request, '¡Perfil actualizado correctamente!')
-        return redirect('productos:mis_links_afiliado')
-
-    context = {
-        'perfil': perfil
-    }
-    return render(request, 'productos/editar_perfil_vendedor.html', context)
-
-
 @login_required
 def mis_links_afiliado(request):
     """
-    Vista para gestionar los links de afiliado del usuario
+    Vista para mostrar los links de afiliado del usuario
     """
-    # Verificar si tiene perfil de vendedor
-    if not hasattr(request.user, 'perfil_vendedor'):
-        messages.warning(request, 'Primero debes crear tu perfil de vendedor.')
-        return redirect('productos:crear_perfil_vendedor')
-
-    perfil = request.user.perfil_vendedor
     productos_afiliados = request.user.productos_afiliados.filter(activo=True)
 
-    # Generar links para cada producto
+    # Generar links para cada producto usando el username como ref
     productos_con_link = []
     for producto in productos_afiliados:
         link = request.build_absolute_uri(
             reverse('productos:detalle_producto', kwargs={'producto_id': producto.id})
-        ) + f'?ref={perfil.slug}'
+        ) + f'?ref={request.user.username}'
 
         productos_con_link.append({
             'producto': producto,
@@ -246,7 +186,6 @@ def mis_links_afiliado(request):
         })
 
     context = {
-        'perfil': perfil,
         'productos_con_link': productos_con_link,
     }
 
@@ -256,125 +195,230 @@ def mis_links_afiliado(request):
 @login_required
 def estadisticas_vendedor(request):
     """
-    Vista para ver estadísticas del vendedor
+    Vista para ver estadísticas del afiliado
     """
-    if not hasattr(request.user, 'perfil_vendedor'):
-        messages.warning(request, 'Primero debes crear tu perfil de vendedor.')
-        return redirect('productos:crear_perfil_vendedor')
-
-    perfil = request.user.perfil_vendedor
     productos_afiliados = request.user.productos_afiliados.all()
 
+    # Obtener ventas generadas por este afiliado
+    ventas = Pedido.objects.filter(
+        afiliado_referido=request.user
+    ).exclude(estado='PENDIENTE')
+
+    # Calcular totales
+    total_ventas = ventas.count()
+    comision_total = sum(v.comision_total for v in ventas)
+    comision_pendiente = sum(v.comision_total for v in ventas.filter(comision_pagada=False))
+    comision_pagada = sum(v.comision_total for v in ventas.filter(comision_pagada=True))
+
     context = {
-        'perfil': perfil,
         'total_productos': productos_afiliados.count(),
         'productos_activos': productos_afiliados.filter(activo=True).count(),
+        'total_ventas': total_ventas,
+        'comision_total': comision_total,
+        'comision_pendiente': comision_pendiente,
+        'comision_pagada': comision_pagada,
+        'ventas_recientes': ventas.order_by('-fecha_creacion')[:10],
     }
 
     return render(request, 'productos/estadisticas_vendedor.html', context)
 
 
 # ============================================================================
-# 🛒 VISTAS PARA SISTEMA DE PEDIDOS
+# 🛒 SISTEMA DE CARRITO CON STOCK
 # ============================================================================
 
-def crear_pedido(request, producto_id):
-    """
-    Vista para crear un nuevo pedido
-    """
-    producto = get_object_or_404(Producto, id=producto_id, activo=True)
-
-    # Obtener código de referencia si existe
-    ref_code = request.GET.get('ref', None)
-    vendedor_perfil = None
-
-    if ref_code:
-        try:
-            vendedor_perfil = PerfilVendedor.objects.get(slug=ref_code, activo=True)
-        except PerfilVendedor.DoesNotExist:
-            vendedor_perfil = None
-
+@login_required
+def agregar_al_carrito(request, producto_id):
+    """Agregar producto al carrito con validación de stock"""
     if request.method == 'POST':
-        # Obtener datos del formulario
-        nombre = request.POST.get('nombre_cliente')
-        email = request.POST.get('email_cliente')
-        telefono = request.POST.get('telefono_cliente')
-        direccion = request.POST.get('direccion_entrega', '')
-        ciudad = request.POST.get('ciudad', '')
+        producto = get_object_or_404(Producto, id=producto_id, activo=True)
         cantidad = int(request.POST.get('cantidad', 1))
-        metodo_pago = request.POST.get('metodo_pago')
-        notas = request.POST.get('notas_cliente', '')
 
-        # Crear el pedido
-        pedido = Pedido.objects.create(
-            producto=producto,
-            cantidad=cantidad,
-            precio_unitario=producto.precio,
-            nombre_cliente=nombre,
-            email_cliente=email,
-            telefono_cliente=telefono,
-            direccion_entrega=direccion,
-            ciudad=ciudad,
-            metodo_pago=metodo_pago,
-            notas_cliente=notas,
-            codigo_referencia=ref_code if ref_code else None,
-            vendedor_referido=vendedor_perfil if vendedor_perfil else None,
+        # Obtener el afiliado referido si existe
+        ref_code = request.POST.get('ref_code', None)
+        afiliado_referido = None
+
+        if ref_code:
+            try:
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                afiliado_referido = User.objects.get(username=ref_code)
+                if afiliado_referido not in producto.afiliados.all():
+                    afiliado_referido = None
+            except User.DoesNotExist:
+                pass
+
+        # Validar cantidad
+        if cantidad < 1:
+            messages.error(request, 'La cantidad debe ser al menos 1.')
+            return redirect('productos:detalle_producto', producto_id=producto_id)
+
+        # Validar stock disponible
+        if not producto.tiene_stock(cantidad):
+            messages.error(
+                request,
+                f'Stock insuficiente. Solo hay {producto.stock} unidades disponibles.'
+            )
+            return redirect('productos:detalle_producto', producto_id=producto_id)
+
+        # Obtener o crear carrito (pedido pendiente)
+        carrito, created = Pedido.objects.get_or_create(
+            usuario=request.user,
+            estado='PENDIENTE',
+            defaults={'total': 0}
         )
 
-        # Si es transferencia, manejar el comprobante
-        if metodo_pago == 'TRANSFERENCIA' and request.FILES.get('comprobante_pago'):
-            pedido.comprobante_pago = request.FILES['comprobante_pago']
-            pedido.save()
+        # Asignar afiliado al carrito si no tiene uno y viene con referencia
+        if not carrito.afiliado_referido and afiliado_referido:
+            carrito.afiliado_referido = afiliado_referido
+            carrito.save()
 
-        # Enviar email de confirmación (opcional)
-        try:
-            asunto = f'Pedido #{pedido.numero_pedido} - {producto.nombre}'
-            mensaje = f"""
-            ¡Gracias por tu pedido!
+        # Verificar si el producto ya está en el carrito
+        item_existente = ItemPedido.objects.filter(
+            pedido=carrito,
+            producto=producto
+        ).first()
 
-            Número de pedido: {pedido.numero_pedido}
-            Producto: {producto.nombre}
-            Cantidad: {cantidad}
-            Total: ₲{pedido.total:,.0f}
-            Método de pago: {pedido.get_metodo_pago_display()}
+        if item_existente:
+            nueva_cantidad = item_existente.cantidad + cantidad
 
-            Te contactaremos pronto para confirmar tu pedido.
+            # Validar stock para la nueva cantidad total
+            if not producto.tiene_stock(nueva_cantidad):
+                messages.error(
+                    request,
+                    f'No puedes agregar {cantidad} unidades más. Solo hay {producto.stock} disponibles y ya tienes {item_existente.cantidad} en el carrito.'
+                )
+                return redirect('productos:detalle_producto', producto_id=producto_id)
 
-            Saludos,
-            Tu Tienda
-            """
-
-            send_mail(
-                asunto,
-                mensaje,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=True,
+            item_existente.cantidad = nueva_cantidad
+            item_existente.save()
+            messages.success(request, f'Cantidad actualizada en el carrito.')
+        else:
+            # Crear nuevo item en el carrito
+            ItemPedido.objects.create(
+                pedido=carrito,
+                producto=producto,
+                cantidad=cantidad,
+                precio_unitario=producto.precio
             )
-        except:
-            pass
+            messages.success(request, f'{producto.nombre} agregado al carrito.')
 
-        # Redirigir a página de confirmación
-        return redirect('productos:confirmacion_pedido', pedido_id=pedido.id)
+        return redirect('productos:ver_carrito')
 
-    # Si es GET, mostrar el formulario
-    context = {
-        'producto': producto,
-        'vendedor_perfil': vendedor_perfil,
-        'ref_code': ref_code,
-    }
-
-    return render(request, 'productos/crear_pedido.html', context)
+    return redirect('productos:detalle_producto', producto_id=producto_id)
 
 
-def confirmacion_pedido(request, pedido_id):
-    """
-    Vista de confirmación del pedido
-    """
-    pedido = get_object_or_404(Pedido, id=pedido_id)
+@login_required
+def ver_carrito(request):
+    """Ver contenido del carrito"""
+    try:
+        carrito = Pedido.objects.get(usuario=request.user, estado='PENDIENTE')
+        items = carrito.items.all()
 
-    context = {
-        'pedido': pedido,
-    }
+        # Verificar stock de cada item
+        items_con_stock = []
+        for item in items:
+            item.stock_suficiente = item.producto.tiene_stock(item.cantidad)
+            items_con_stock.append(item)
 
-    return render(request, 'productos/confirmacion_pedido.html', context)
+        context = {
+            'carrito': carrito,
+            'items': items_con_stock,
+        }
+    except Pedido.DoesNotExist:
+        context = {
+            'carrito': None,
+            'items': [],
+        }
+
+    return render(request, 'productos/carrito.html', context)
+
+
+@login_required
+def actualizar_cantidad_carrito(request, item_id):
+    """Actualizar cantidad de un item en el carrito"""
+    if request.method == 'POST':
+        item = get_object_or_404(ItemPedido, id=item_id, pedido__usuario=request.user)
+        nueva_cantidad = int(request.POST.get('cantidad', 1))
+
+        if nueva_cantidad < 1:
+            messages.error(request, 'La cantidad debe ser al menos 1.')
+            return redirect('productos:ver_carrito')
+
+        # Validar stock
+        if not item.producto.tiene_stock(nueva_cantidad):
+            messages.error(
+                request,
+                f'Stock insuficiente. Solo hay {item.producto.stock} unidades disponibles.'
+            )
+            return redirect('productos:ver_carrito')
+
+        item.cantidad = nueva_cantidad
+        item.save()
+        messages.success(request, 'Cantidad actualizada.')
+
+    return redirect('productos:ver_carrito')
+
+
+@login_required
+def eliminar_del_carrito(request, item_id):
+    """Eliminar un item del carrito"""
+    item = get_object_or_404(ItemPedido, id=item_id, pedido__usuario=request.user)
+    producto_nombre = item.producto.nombre
+    item.delete()
+    messages.success(request, f'{producto_nombre} eliminado del carrito.')
+    return redirect('productos:ver_carrito')
+
+
+@login_required
+@transaction.atomic
+def confirmar_pedido(request):
+    """Confirmar pedido y reducir stock"""
+    try:
+        carrito = Pedido.objects.get(usuario=request.user, estado='PENDIENTE')
+        items = carrito.items.all()
+
+        if not items:
+            messages.error(request, 'Tu carrito está vacío.')
+            return redirect('productos:ver_carrito')
+
+        # Validar stock de todos los items antes de confirmar
+        for item in items:
+            if not item.producto.tiene_stock(item.cantidad):
+                messages.error(
+                    request,
+                    f'Stock insuficiente para {item.producto.nombre}. Solo hay {item.producto.stock} unidades disponibles.'
+                )
+                return redirect('productos:ver_carrito')
+
+        # Reducir stock de todos los productos
+        for item in items:
+            item.producto.reducir_stock(item.cantidad)
+
+        # Cambiar estado del pedido
+        carrito.estado = 'CONFIRMADO'
+        carrito.fecha_confirmacion = timezone.now()
+        carrito.save()
+
+        messages.success(
+            request,
+            f'¡Pedido #{carrito.numero_pedido} confirmado exitosamente! Total: ₲{carrito.total:,.0f}'
+        )
+        return redirect('productos:mis_pedidos')
+
+    except Pedido.DoesNotExist:
+        messages.error(request, 'No tienes un carrito activo.')
+        return redirect('productos:home')
+    except Exception as e:
+        messages.error(request, f'Error al confirmar el pedido: {str(e)}')
+        return redirect('productos:ver_carrito')
+
+
+@login_required
+def mis_pedidos(request):
+    """Ver historial de pedidos del usuario"""
+    pedidos = Pedido.objects.filter(
+        usuario=request.user
+    ).exclude(estado='PENDIENTE').order_by('-fecha_creacion')
+
+    return render(request, 'productos/mis_pedidos.html', {'pedidos': pedidos})

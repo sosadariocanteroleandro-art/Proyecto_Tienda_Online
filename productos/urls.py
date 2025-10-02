@@ -16,7 +16,7 @@ urlpatterns = [
     # Crear producto (volverse vendedor)
     path('crear/', views.crear_producto, name='crear_producto'),
 
-    # Detalle de producto (CON SISTEMA DE REFERENCIA)
+    # Detalle de producto (CON SISTEMA DE REFERENCIA SIMPLIFICADO)
     path('detalle/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
 
     # Afiliar/Desafiliar producto
@@ -24,22 +24,32 @@ urlpatterns = [
     path('desafiliar-producto/<int:producto_id>/', views.desafiliar_producto, name='desafiliar_producto'),
 
     # ========================================================================
-    # 🆕 SISTEMA DE AFILIADOS CON LINKS DE REFERENCIA
+    # 🆕 SISTEMA DE AFILIADOS SIMPLIFICADO
     # ========================================================================
+    # Mis links de afiliado
+    path('mis-links/', views.mis_links_afiliado, name='mis_links_afiliado'),
 
-    # Crear y editar perfil de vendedor
-    path('afiliado/crear-perfil/', views.crear_perfil_vendedor, name='crear_perfil_vendedor'),
-    path('afiliado/editar-perfil/', views.editar_perfil_vendedor, name='editar_perfil_vendedor'),
-
-    # Gestionar links de afiliado
-    path('afiliado/mis-links/', views.mis_links_afiliado, name='mis_links_afiliado'),
-
-    # Estadísticas
-    path('afiliado/estadisticas/', views.estadisticas_vendedor, name='estadisticas_vendedor'),
+    # Estadísticas de afiliado
+    path('estadisticas/', views.estadisticas_vendedor, name='estadisticas_vendedor'),
 
     # ========================================================================
-    # 🛒 SISTEMA DE PEDIDOS
+    # 🛒 SISTEMA DE CARRITO CON STOCK
     # ========================================================================
-    path('pedido/crear/<int:producto_id>/', views.crear_pedido, name='crear_pedido'),
-    path('pedido/confirmacion/<int:pedido_id>/', views.confirmacion_pedido, name='confirmacion_pedido'),
+    # Ver carrito
+    path('carrito/', views.ver_carrito, name='ver_carrito'),
+
+    # Agregar producto al carrito
+    path('carrito/agregar/<int:producto_id>/', views.agregar_al_carrito, name='agregar_al_carrito'),
+
+    # Actualizar cantidad en el carrito
+    path('carrito/actualizar/<int:item_id>/', views.actualizar_cantidad_carrito, name='actualizar_cantidad_carrito'),
+
+    # Eliminar del carrito
+    path('carrito/eliminar/<int:item_id>/', views.eliminar_del_carrito, name='eliminar_del_carrito'),
+
+    # Confirmar pedido
+    path('carrito/confirmar/', views.confirmar_pedido, name='confirmar_pedido'),
+
+    # Ver mis pedidos
+    path('mis-pedidos/', views.mis_pedidos, name='mis_pedidos'),
 ]

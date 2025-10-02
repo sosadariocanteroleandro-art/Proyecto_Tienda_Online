@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.utils import timezone
+from decimal import Decimal
 
 
 class Producto(models.Model):
@@ -29,6 +30,12 @@ class Producto(models.Model):
         verbose_name="Tipo de Producto"
     )
 
+    stock = models.IntegerField(
+        default=0,
+        verbose_name="Stock Disponible",
+        help_text="Cantidad disponible en inventario. Los productos digitales tienen stock ilimitado"
+    )
+
     vendedor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -40,7 +47,8 @@ class Producto(models.Model):
     afiliados = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='productos_afiliados',
-        blank=True
+        blank=True,
+        verbose_name="Afiliados"
     )
 
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de Creación")
@@ -50,221 +58,36 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+    def tiene_stock(self, cantidad=1):
+        """Verifica si hay stock suficiente"""
+        if self.tipo_producto == 'DIGITAL':
+            return True
+        return self.stock >= cantidad
+
+    def reducir_stock(self, cantidad):
+        """Reduce el stock después de una venta"""
+        if self.tipo_producto == 'FISICO' and self.stock >= cantidad:
+            self.stock -= cantidad
+            self.save()
+            return True
+        return False
+
     class Meta:
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
         ordering = ['-fecha_creacion']
 
 
-class PerfilVendedor(models.Model):
-    """
-    Perfil extendido para vendedores/afiliados.
-    """
-    usuario = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='perfil_vendedor',
-        verbose_name="Usuario"
-    )
-
-    slug = models.SlugField(
-        unique=True,
-        blank=True,
-        verbose_name="URL Personalizada",
-        help_text="Ej: juan-perez → tutienda.com/vendedor/juan-perez"
-    )
-
-    nombre_tienda = models.CharField(
-        max_length=100,
-        default="Mi Tienda",
-        verbose_name="Nombre de la Tienda"
-    )
-
-    descripcion = models.TextField(
-        default="¡Bienvenido a mi tienda!",
-        verbose_name="Descripción",
-        help_text="Cuéntale a tus clientes sobre ti"
-    )
-
-    foto_perfil = models.ImageField(
-        upload_to='vendedores/perfiles/',
-        blank=True,
-        null=True,
-        verbose_name="Foto de Perfil"
-    )
-
-    banner = models.ImageField(
-        upload_to='vendedores/banners/',
-        blank=True,
-        null=True,
-        verbose_name="Banner de Portada"
-    )
-
-    whatsapp = models.CharField(
-        max_length=20,
-        blank=True,
-        verbose_name="WhatsApp",
-        help_text="Ej: +5491123456789"
-    )
-
-    email_contacto = models.EmailField(
-        blank=True,
-        verbose_name="Email de Contacto"
-    )
-
-    facebook = models.URLField(
-        blank=True,
-        verbose_name="Facebook"
-    )
-
-    instagram = models.CharField(
-        max_length=50,
-        blank=True,
-        verbose_name="Instagram",
-        help_text="Solo el nombre de usuario (sin @)"
-    )
-
-    color_tema = models.CharField(
-        max_length=7,
-        default="#667eea",
-        verbose_name="Color del Tema",
-        help_text="Color principal de tu página"
-    )
-
-    activo = models.BooleanField(
-        default=True,
-        verbose_name="Perfil Activo"
-    )
-
-    fecha_creacion = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Fecha de Registro"
-    )
-
-    fecha_actualizacion = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Última Actualización"
-    )
-
-    def save(self, *args, **kwargs):
-        """Genera automáticamente el slug si no existe"""
-        if not self.slug:
-            base_slug = slugify(self.usuario.username)
-            slug = base_slug
-            counter = 1
-
-            while PerfilVendedor.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
-
-            self.slug = slug
-
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.nombre_tienda} (@{self.usuario.username})"
-
-    class Meta:
-        verbose_name = "Perfil de Vendedor"
-        verbose_name_plural = "Perfiles de Vendedores"
-        ordering = ['-fecha_creacion']
-
-
-class ProductoVendedor(models.Model):
-    """
-    Relación entre un vendedor y un producto que promociona.
-    """
-    vendedor = models.ForeignKey(
-        PerfilVendedor,
-        on_delete=models.CASCADE,
-        related_name='productos_promocionados',
-        verbose_name="Vendedor"
-    )
-
-    producto = models.ForeignKey(
-        Producto,
-        on_delete=models.CASCADE,
-        related_name='vendedores_promocionando',
-        verbose_name="Producto"
-    )
-
-    descripcion_personalizada = models.TextField(
-        verbose_name="Tu Descripción del Producto",
-        help_text="Escribe tu propia descripción de venta"
-    )
-
-    precio_venta = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        verbose_name="Tu Precio de Venta",
-        help_text="Puede incluir tu ganancia/comisión"
-    )
-
-    mensaje_especial = models.TextField(
-        blank=True,
-        verbose_name="Mensaje Especial",
-        help_text="¿Por qué deberían comprarte a ti?"
-    )
-
-    beneficios_extra = models.TextField(
-        blank=True,
-        verbose_name="Beneficios Adicionales",
-        help_text="Lista de beneficios que ofreces"
-    )
-
-    vistas = models.IntegerField(
-        default=0,
-        verbose_name="Número de Vistas"
-    )
-
-    clicks_whatsapp = models.IntegerField(
-        default=0,
-        verbose_name="Clicks en WhatsApp"
-    )
-
-    activo = models.BooleanField(
-        default=True,
-        verbose_name="Publicación Activa"
-    )
-
-    fecha_publicacion = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Fecha de Publicación"
-    )
-
-    fecha_actualizacion = models.DateTimeField(
-        auto_now=True,
-        verbose_name="Última Actualización"
-    )
-
-    def get_url_completa(self):
-        """Retorna la URL completa de la página del vendedor"""
-        from django.urls import reverse
-        return reverse('pagina_vendedor', kwargs={
-            'slug': self.vendedor.slug,
-            'producto_id': self.producto.id
-        })
-
-    def __str__(self):
-        return f"{self.vendedor.nombre_tienda} → {self.producto.nombre}"
-
-    class Meta:
-        verbose_name = "Producto Promocionado"
-        verbose_name_plural = "Productos Promocionados"
-        unique_together = ('vendedor', 'producto')
-        ordering = ['-fecha_publicacion']
-
-
 # ============================================================================
-# 🛒 MODELOS PARA SISTEMA DE PEDIDOS Y VENTAS
+# 🛒 MODELOS PARA SISTEMA DE CARRITO Y PEDIDOS CON STOCK
 # ============================================================================
 
 class Pedido(models.Model):
     """
-    Modelo para registrar los pedidos/compras de los clientes
+    Modelo para pedidos que puede contener múltiples productos (carrito)
     """
     ESTADO_CHOICES = (
-        ('PENDIENTE', 'Pendiente de Confirmación'),
+        ('PENDIENTE', 'Pendiente'),  # Carrito activo
         ('CONFIRMADO', 'Confirmado'),
         ('PROCESANDO', 'En Proceso'),
         ('ENVIADO', 'Enviado'),
@@ -272,112 +95,178 @@ class Pedido(models.Model):
         ('CANCELADO', 'Cancelado'),
     )
 
-    METODO_PAGO_CHOICES = (
-        ('CONTRA_ENTREGA', 'Pago contra entrega'),
-        ('TRANSFERENCIA', 'Transferencia bancaria'),
-        ('TARJETA', 'Tarjeta de crédito/débito'),
+    # Información básica
+    numero_pedido = models.CharField(max_length=20, unique=True, blank=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='pedidos',
+        verbose_name='Usuario'
     )
 
-    # Información del pedido
-    numero_pedido = models.CharField(max_length=20, unique=True, editable=False)
-    fecha_pedido = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='PENDIENTE')
-
-    # Producto
-    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='pedidos')
-    cantidad = models.IntegerField(default=1)
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Cliente
-    nombre_cliente = models.CharField(max_length=200, verbose_name='Nombre completo')
-    email_cliente = models.EmailField(verbose_name='Email')
-    telefono_cliente = models.CharField(max_length=20, verbose_name='Teléfono')
-    direccion_entrega = models.TextField(verbose_name='Dirección de entrega', blank=True)
-    ciudad = models.CharField(max_length=100, blank=True)
-
-    # Método de pago
-    metodo_pago = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES)
-    comprobante_pago = models.ImageField(
-        upload_to='comprobantes/',
-        null=True,
-        blank=True,
-        verbose_name='Comprobante de pago'
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADO_CHOICES,
+        default='PENDIENTE',
+        verbose_name='Estado'
     )
 
-    # Sistema de afiliados/referencia
-    codigo_referencia = models.CharField(
-        max_length=100,
-        null=True,
-        blank=True,
-        verbose_name='Código de referencia del afiliado'
-    )
-    vendedor_referido = models.ForeignKey(
-        PerfilVendedor,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='ventas_referidas',
-        verbose_name='Vendedor que refirió'
-    )
-
-    # Comisión
-    comision_afiliado = models.DecimalField(
+    total = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0,
-        verbose_name='Comisión del afiliado'
+        verbose_name='Total'
     )
+
+    # Información de entrega (se llena al confirmar)
+    nombre_completo = models.CharField(max_length=200, blank=True, verbose_name='Nombre completo')
+    email = models.EmailField(blank=True, verbose_name='Email')
+    telefono = models.CharField(max_length=20, blank=True, verbose_name='Teléfono')
+    direccion_envio = models.TextField(blank=True, verbose_name='Dirección de entrega')
+    ciudad = models.CharField(max_length=100, blank=True, verbose_name='Ciudad')
+
+    # Sistema de referidos - SIMPLIFICADO
+    afiliado_referido = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ventas_como_afiliado',
+        verbose_name='Afiliado que refirió'
+    )
+
+    comision_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name='Comisión total'
+    )
+
     porcentaje_comision = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=10.00,
         verbose_name='% de comisión'
     )
-    comision_pagada = models.BooleanField(default=False, verbose_name='Comisión pagada')
+
+    comision_pagada = models.BooleanField(
+        default=False,
+        verbose_name='Comisión pagada'
+    )
+
+    # Fechas
+    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name='Fecha de creación')
+    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name='Última actualización')
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de confirmación')
 
     # Notas
-    notas_cliente = models.TextField(blank=True, verbose_name='Notas del cliente')
-    notas_admin = models.TextField(blank=True, verbose_name='Notas administrativas')
-
-    # Tracking
-    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
-    fecha_envio = models.DateTimeField(null=True, blank=True)
-    fecha_entrega = models.DateTimeField(null=True, blank=True)
+    notas = models.TextField(blank=True, verbose_name='Notas del cliente')
 
     class Meta:
         verbose_name = 'Pedido'
         verbose_name_plural = 'Pedidos'
-        ordering = ['-fecha_pedido']
+        ordering = ['-fecha_creacion']
 
     def save(self, *args, **kwargs):
-        if not self.numero_pedido:
-            # Generar número de pedido único
+        # Generar número de pedido solo cuando se confirma
+        if not self.numero_pedido and self.estado != 'PENDIENTE':
             fecha = timezone.now()
             prefijo = fecha.strftime('%Y%m%d')
             ultimo_pedido = Pedido.objects.filter(
                 numero_pedido__startswith=prefijo
-            ).order_by('-numero_pedido').first()
+            ).exclude(numero_pedido='').order_by('-numero_pedido').first()
 
             if ultimo_pedido:
-                ultimo_numero = int(ultimo_pedido.numero_pedido[-4:])
-                nuevo_numero = ultimo_numero + 1
+                try:
+                    ultimo_numero = int(ultimo_pedido.numero_pedido[-3:])
+                    nuevo_numero = ultimo_numero + 1
+                except:
+                    nuevo_numero = 1
             else:
                 nuevo_numero = 1
 
-            self.numero_pedido = f"{prefijo}{nuevo_numero:04d}"
-
-        # Calcular total
-        self.total = self.precio_unitario * self.cantidad
-
-        # Calcular comisión si hay vendedor referido
-        if self.vendedor_referido and not self.comision_afiliado:
-            self.comision_afiliado = (self.total * self.porcentaje_comision) / 100
+            self.numero_pedido = f"{prefijo}{nuevo_numero:03d}"
 
         super().save(*args, **kwargs)
+        self.actualizar_total()
+
+    def actualizar_total(self):
+        """Recalcula el total del pedido y la comisión"""
+        total = sum(item.subtotal for item in self.items.all())
+
+        # Calcular comisión si hay afiliado
+        if self.afiliado_referido:
+            porcentaje = Decimal(str(self.porcentaje_comision))
+            comision = (total * porcentaje) / Decimal('100')
+        else:
+            comision = Decimal('0')
+
+        if self.total != total or self.comision_total != comision:
+            self.total = total
+            self.comision_total = comision
+            Pedido.objects.filter(pk=self.pk).update(
+                total=total,
+                comision_total=comision
+            )
 
     def __str__(self):
-        return f"{self.numero_pedido} - {self.nombre_cliente} - {self.producto.nombre}"
+        if self.numero_pedido:
+            return f"Pedido #{self.numero_pedido} - {self.usuario.username}"
+        return f"Carrito de {self.usuario.username}"
+
+
+class ItemPedido(models.Model):
+    """
+    Cada producto dentro de un pedido
+    """
+    pedido = models.ForeignKey(
+        Pedido,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Pedido'
+    )
+
+    producto = models.ForeignKey(
+        Producto,
+        on_delete=models.CASCADE,
+        related_name='items_pedido',
+        verbose_name='Producto'
+    )
+
+    cantidad = models.IntegerField(default=1, verbose_name='Cantidad')
+
+    precio_unitario = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name='Precio unitario'
+    )
+
+    subtotal = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name='Subtotal'
+    )
+
+    fecha_agregado = models.DateTimeField(auto_now_add=True, verbose_name='Fecha agregado')
+
+    class Meta:
+        verbose_name = 'Item de Pedido'
+        verbose_name_plural = 'Items de Pedido'
+        unique_together = ('pedido', 'producto')
+
+    def save(self, *args, **kwargs):
+        self.subtotal = self.precio_unitario * self.cantidad
+        super().save(*args, **kwargs)
+        self.pedido.actualizar_total()
+
+    def delete(self, *args, **kwargs):
+        pedido = self.pedido
+        super().delete(*args, **kwargs)
+        pedido.actualizar_total()
+
+    def __str__(self):
+        return f"{self.cantidad}x {self.producto.nombre}"
 
 
 class ConfiguracionPagos(models.Model):

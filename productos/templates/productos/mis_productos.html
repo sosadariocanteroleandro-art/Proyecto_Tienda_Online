@@ -90,6 +90,12 @@
                 <a href="{% url 'productos:crear_producto' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
                     <span class="font-medium">💼 Volverse Vendedor</span>
                 </a>
+                <a href="{% url 'productos:mis_links_afiliado' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">🔗 Mis Links</span>
+                </a>
+                <a href="{% url 'productos:estadisticas_vendedor' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+                    <span class="font-medium">📊 Estadísticas</span>
+                </a>
                 {% endif %}
 
                 <div class="mt-6 pt-6 border-t border-white border-opacity-30">
@@ -139,18 +145,18 @@
                 {% endif %}
             </p>
 
-            <!-- Botón para Gestionar Links -->
-            {% if tiene_perfil %}
-            <a href="{% url 'productos:mis_links_afiliado' %}"
-               class="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
-                🔗 Ver Mis Links de Afiliado
-            </a>
-            {% elif productos_afiliados %}
-            <a href="{% url 'productos:crear_perfil_vendedor' %}"
-               class="inline-block bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
-                ✨ Crear Mi Perfil de Afiliado
-            </a>
-            <p class="text-sm text-gray-500 mt-3">Crea tu perfil para obtener links únicos y ganar comisiones</p>
+            <!-- Botones de acción -->
+            {% if productos_afiliados %}
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="{% url 'productos:mis_links_afiliado' %}"
+                   class="inline-block bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    🔗 Ver Mis Links de Afiliado
+                </a>
+                <a href="{% url 'productos:estadisticas_vendedor' %}"
+                   class="inline-block bg-gradient-to-r from-green-600 to-teal-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    📊 Ver Estadísticas
+                </a>
+            </div>
             {% endif %}
         </div>
 
@@ -203,16 +209,14 @@
 
                         <!-- Botones de acción -->
                         <div class="flex gap-2">
-                            <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105">
+                            <a href="{% url 'productos:detalle_producto' producto.id %}?ref={{ request.user.username }}"
+                               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 transform hover:scale-105 text-center">
                                 Ver Detalles
+                            </a>
+                            <button type="button" onclick="desafiliar({{ producto.id }}, '{{ producto.nombre }}')"
+                                    class="desafiliar-btn text-white font-semibold py-2 px-3 rounded-lg">
+                                🗑️
                             </button>
-                            <form method="post" action="{% url 'productos:desafiliar_producto' producto.id %}" class="inline-block">
-                                {% csrf_token %}
-                                <button type="button" onclick="desafiliar({{ producto.id }}, '{{ producto.nombre }}')"
-                                        class="desafiliar-btn text-white font-semibold py-2 px-3 rounded-lg">
-                                    🗑️
-                                </button>
-                            </form>
                         </div>
                     </div>
                 </div>
@@ -228,10 +232,8 @@
                         <div class="text-gray-600">Total de Productos</div>
                     </div>
                     <div class="text-center p-4 bg-green-50 rounded-xl">
-                        <div class="text-3xl font-bold text-green-600">
-                            {% widthratio productos_afiliados|length 1 100 %}%
-                        </div>
-                        <div class="text-gray-600">Tasa de Conversión</div>
+                        <div class="text-3xl font-bold text-green-600">10%</div>
+                        <div class="text-gray-600">Comisión por Venta</div>
                     </div>
                     <div class="text-center p-4 bg-purple-50 rounded-xl">
                         <div class="text-3xl font-bold text-purple-600">

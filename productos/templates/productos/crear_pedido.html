@@ -22,18 +22,6 @@
         }
         .payment-option {
             transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .payment-option:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        .payment-option.selected {
-            border: 3px solid #10b981;
-            background: #ecfdf5;
-        }
-        #comprobante-section {
-            display: none;
         }
     </style>
 </head>
@@ -118,35 +106,32 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- Pago contra entrega -->
-                                <div class="payment-option border-3 border-gray-300 rounded-xl p-4 text-center"
-                                     onclick="selectPayment('CONTRA_ENTREGA', this)">
+                                <label class="payment-option border-2 border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition">
                                     <input type="radio" name="metodo_pago" value="CONTRA_ENTREGA" class="hidden" required>
                                     <div class="text-4xl mb-2">💵</div>
                                     <div class="font-bold text-gray-800">Contra Entrega</div>
                                     <div class="text-xs text-gray-600 mt-1">Paga al recibir</div>
-                                </div>
+                                </label>
 
                                 <!-- Transferencia -->
-                                <div class="payment-option border-3 border-gray-300 rounded-xl p-4 text-center"
-                                     onclick="selectPayment('TRANSFERENCIA', this)">
+                                <label class="payment-option border-2 border-gray-300 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500 transition">
                                     <input type="radio" name="metodo_pago" value="TRANSFERENCIA" class="hidden" required>
                                     <div class="text-4xl mb-2">🏦</div>
                                     <div class="font-bold text-gray-800">Transferencia</div>
                                     <div class="text-xs text-gray-600 mt-1">Sube comprobante</div>
-                                </div>
+                                </label>
 
-                                <!-- Tarjeta -->
-                                <div class="payment-option border-3 border-gray-300 rounded-xl p-4 text-center"
-                                     onclick="selectPayment('TARJETA', this)">
-                                    <input type="radio" name="metodo_pago" value="TARJETA" class="hidden" required>
+                                <!-- Tarjeta (deshabilitado) -->
+                                <label class="payment-option border-2 border-gray-300 rounded-xl p-4 text-center opacity-50 cursor-not-allowed">
+                                    <input type="radio" name="metodo_pago" value="TARJETA" class="hidden" disabled>
                                     <div class="text-4xl mb-2">💳</div>
                                     <div class="font-bold text-gray-800">Tarjeta</div>
                                     <div class="text-xs text-gray-600 mt-1">Próximamente</div>
-                                </div>
+                                </label>
                             </div>
 
                             <!-- Sección de transferencia -->
-                            <div id="comprobante-section" class="mt-6 p-4 bg-blue-50 rounded-lg">
+                            <div id="comprobante-section" class="mt-6 p-4 bg-blue-50 rounded-lg" style="display: none;">
                                 <h3 class="font-bold text-gray-800 mb-3">📤 Datos para Transferencia</h3>
                                 <div class="text-sm text-gray-700 space-y-2 mb-4">
                                     <p><strong>Banco:</strong> Banco Nacional</p>
@@ -157,13 +142,6 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Subir Comprobante *</label>
                                 <input type="file" name="comprobante_pago" accept="image/*"
                                        class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700">
-                            </div>
-
-                            <!-- Info tarjeta -->
-                            <div id="tarjeta-info" class="mt-6 p-4 bg-yellow-50 rounded-lg hidden">
-                                <p class="text-sm text-yellow-800">
-                                    💡 El pago con tarjeta estará disponible próximamente. Por favor, elige otra opción de pago.
-                                </p>
                             </div>
                         </div>
 
@@ -236,38 +214,29 @@
     <script>
         const precioUnitario = {{ producto.precio }};
 
-        function selectPayment(method, element) {
-            // Remover selección anterior
-            document.querySelectorAll('.payment-option').forEach(opt => {
-                opt.classList.remove('selected');
+        // Manejar selección de método de pago
+        document.querySelectorAll('input[name="metodo_pago"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Remover selección visual de todos
+                document.querySelectorAll('.payment-option').forEach(opt => {
+                    opt.classList.remove('border-green-500', 'bg-green-50');
+                    opt.classList.add('border-gray-300');
+                });
+
+                // Agregar selección visual al seleccionado
+                const selectedLabel = this.closest('.payment-option');
+                selectedLabel.classList.remove('border-gray-300');
+                selectedLabel.classList.add('border-green-500', 'bg-green-50');
+
+                // Mostrar/ocultar sección de comprobante
+                const comprobanteSection = document.getElementById('comprobante-section');
+                if (this.value === 'TRANSFERENCIA') {
+                    comprobanteSection.style.display = 'block';
+                } else {
+                    comprobanteSection.style.display = 'none';
+                }
             });
-
-            // Seleccionar nuevo
-            element.classList.add('selected');
-            element.querySelector('input[type="radio"]').checked = true;
-
-            // Mostrar/ocultar secciones según método
-            const comprobanteSection = document.getElementById('comprobante-section');
-            const tarjetaInfo = document.getElementById('tarjeta-info');
-            const submitBtn = document.getElementById('submit-btn');
-
-            if (method === 'TRANSFERENCIA') {
-                comprobanteSection.style.display = 'block';
-                tarjetaInfo.style.display = 'none';
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else if (method === 'TARJETA') {
-                comprobanteSection.style.display = 'none';
-                tarjetaInfo.style.display = 'block';
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                comprobanteSection.style.display = 'none';
-                tarjetaInfo.style.display = 'none';
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
+        });
 
         function updateTotal() {
             const cantidad = parseInt(document.getElementById('cantidad-input').value);
@@ -284,12 +253,6 @@
             if (!metodoSeleccionado) {
                 e.preventDefault();
                 alert('Por favor, selecciona un método de pago');
-                return false;
-            }
-
-            if (metodoSeleccionado.value === 'TARJETA') {
-                e.preventDefault();
-                alert('El pago con tarjeta aún no está disponible. Por favor, elige otra opción.');
                 return false;
             }
 

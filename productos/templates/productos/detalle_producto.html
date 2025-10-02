@@ -138,6 +138,33 @@
                         <span class="text-5xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
                     </div>
 
+                    <!-- NUEVO: Indicador de Stock -->
+                    {% if producto.tipo_producto == 'FISICO' %}
+                    <div class="mb-6 p-4 rounded-lg {% if stock_disponible %}bg-green-50 border border-green-200{% else %}bg-red-50 border border-red-200{% endif %}">
+                        {% if stock_disponible %}
+                            {% if cantidad_stock <= 5 %}
+                                <p class="text-orange-600 font-semibold flex items-center gap-2">
+                                    ⚠️ ¡Últimas unidades! Solo quedan {{ cantidad_stock }} disponibles
+                                </p>
+                            {% else %}
+                                <p class="text-green-600 font-semibold flex items-center gap-2">
+                                    ✅ Disponible - {{ cantidad_stock }} unidades en stock
+                                </p>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-red-600 font-semibold flex items-center gap-2">
+                                ❌ Sin stock disponible
+                            </p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <p class="text-blue-600 font-semibold flex items-center gap-2">
+                            ♾️ Producto digital - Disponibilidad ilimitada
+                        </p>
+                    </div>
+                    {% endif %}
+
                     <!-- Descripción -->
                     <div class="mb-6">
                         <h3 class="text-xl font-bold text-gray-800 mb-3">📝 Descripción</h3>
@@ -153,13 +180,46 @@
                     </div>
                     {% endif %}
 
+                    <!-- NUEVO: Formulario para agregar al carrito con cantidad -->
+                    {% if request.user.is_authenticated %}
+                    <form method="post" action="{% url 'productos:agregar_al_carrito' producto.id %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="flex items-center gap-4 mb-4">
+                            <label for="cantidad" class="text-gray-700 font-semibold">Cantidad:</label>
+                            <input type="number"
+                                   id="cantidad"
+                                   name="cantidad"
+                                   value="1"
+                                   min="1"
+                                   {% if producto.tipo_producto == 'FISICO' and cantidad_stock %}max="{{ cantidad_stock }}"{% endif %}
+                                   {% if not stock_disponible %}disabled{% endif %}
+                                   class="w-24 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+
+                        <!-- Botón de Agregar al Carrito -->
+                        <button type="submit"
+                                {% if not stock_disponible %}disabled{% endif %}
+                                class="w-full font-bold py-4 px-8 rounded-xl text-center text-lg shadow-xl flex items-center justify-center gap-3 transition duration-300 transform hover:scale-105
+                                {% if stock_disponible %}bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white{% else %}bg-gray-400 text-gray-200 cursor-not-allowed{% endif %}">
+                            🛒 Agregar al Carrito
+                        </button>
+                    </form>
+                    {% endif %}
+
                     <!-- Botones de Acción -->
                     <div class="space-y-3">
                         <!-- Botón principal de COMPRAR -->
+                        {% if stock_disponible %}
                         <a href="{% url 'productos:crear_pedido' producto.id %}{% if ref_code %}?ref={{ ref_code }}{% endif %}"
                            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-center text-lg shadow-xl flex items-center justify-center gap-3 transition duration-300 transform hover:scale-105">
-                            🛒 Comprar Ahora
+                            💳 Comprar Ahora
                         </a>
+                        {% else %}
+                        <button disabled
+                                class="w-full bg-gray-400 text-gray-200 font-bold py-4 px-8 rounded-xl text-center text-lg shadow-xl flex items-center justify-center gap-3 cursor-not-allowed">
+                            ❌ Sin Stock Disponible
+                        </button>
+                        {% endif %}
 
                         <!-- Botón de WhatsApp (alternativo) -->
                         <a href="https://wa.me/595981234567?text=Hola! Estoy interesado en {{ producto.nombre }}{% if ref_code %} (ref: {{ ref_code }}){% endif %}"
@@ -170,30 +230,6 @@
                             </svg>
                             Consultar por WhatsApp
                         </a>
-
-                        <!-- Botón de afiliarme (SOLO si está logueado) -->
-                        {% if request.user.is_authenticated %}
-                            {% if afiliado %}
-                                <!-- Usuario YA está afiliado -->
-                                <div class="w-full bg-green-100 border-2 border-green-500 text-green-700 font-bold py-3 px-8 rounded-xl text-center">
-                                    ✅ Ya estás afiliado a este producto
-                                </div>
-                            {% else %}
-                                <!-- Usuario NO está afiliado - mostrar botón -->
-                                <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post">
-                                    {% csrf_token %}
-                                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition duration-300">
-                                        🤝 Afiliarme a este Producto
-                                    </button>
-                                </form>
-                            {% endif %}
-                        {% else %}
-                            <!-- Usuario NO está logueado - opcional: mostrar mensaje -->
-                            <a href="{% url 'usuarios:login' %}?next={{ request.path }}"
-                               class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl text-center block transition duration-300">
-                                🔐 Inicia sesión para afiliarte
-                            </a>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -214,7 +250,19 @@
                     </div>
                     <div>
                         <h4 class="font-semibold text-gray-700 mb-2">Disponibilidad</h4>
-                        <p class="text-green-600 font-semibold">✅ Disponible</p>
+                        {% if stock_disponible %}
+                            {% if producto.tipo_producto == 'FISICO' %}
+                                {% if cantidad_stock <= 5 %}
+                                <p class="text-orange-600 font-semibold">⚠️ Últimas {{ cantidad_stock }} unidades</p>
+                                {% else %}
+                                <p class="text-green-600 font-semibold">✅ En Stock ({{ cantidad_stock }} unidades)</p>
+                                {% endif %}
+                            {% else %}
+                            <p class="text-blue-600 font-semibold">♾️ Siempre disponible</p>
+                            {% endif %}
+                        {% else %}
+                        <p class="text-red-600 font-semibold">❌ Sin stock</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
