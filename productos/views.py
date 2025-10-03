@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 from .models import Producto, Pedido, ItemPedido, ConfiguracionPagos
 from .forms import ProductoForm
 
@@ -193,6 +194,27 @@ def mis_links_afiliado(request):
 
 
 @login_required
+def editar_perfil_vendedor(request):
+    """
+    Vista para editar el perfil de vendedor/afiliado
+    """
+    # Por ahora, esta es una vista básica
+    # Puedes expandirla con un formulario para editar información del usuario
+
+    if request.method == 'POST':
+        # Aquí puedes agregar lógica para actualizar el perfil
+        # Por ejemplo: actualizar nombre, foto, descripción, etc.
+        messages.success(request, '¡Perfil actualizado correctamente!')
+        return redirect('productos:mis_links_afiliado')
+
+    context = {
+        'user': request.user,
+    }
+
+    return render(request, 'productos/editar_perfil_vendedor.html', context)
+
+
+@login_required
 def estadisticas_vendedor(request):
     """
     Vista para ver estadísticas del afiliado
@@ -372,8 +394,10 @@ def eliminar_del_carrito(request, item_id):
 
 @login_required
 @transaction.atomic
+@login_required
+@login_required
 def confirmar_pedido(request):
-    """Confirmar pedido y reducir stock"""
+    """Vista para confirmar el pedido con selección de método de pago"""
     try:
         carrito = Pedido.objects.get(usuario=request.user, estado='PENDIENTE')
         items = carrito.items.all()
@@ -382,36 +406,140 @@ def confirmar_pedido(request):
             messages.error(request, 'Tu carrito está vacío.')
             return redirect('productos:ver_carrito')
 
-        # Validar stock de todos los items antes de confirmar
+        # Validar stock
         for item in items:
             if not item.producto.tiene_stock(item.cantidad):
                 messages.error(
                     request,
-                    f'Stock insuficiente para {item.producto.nombre}. Solo hay {item.producto.stock} unidades disponibles.'
+                    f'Stock insuficiente para {item.producto.nombre}.'
                 )
                 return redirect('productos:ver_carrito')
 
-        # Reducir stock de todos los productos
-        for item in items:
-            item.producto.reducir_stock(item.cantidad)
+        # Verificar si solo hay productos digitales
+        solo_digitales = all(item.producto.tipo_producto == 'DIGITAL' for item in items)
 
-        # Cambiar estado del pedido
-        carrito.estado = 'CONFIRMADO'
-        carrito.fecha_confirmacion = timezone.now()
-        carrito.save()
+        # Obtener configuración de pagos
+        try:
+            config_pagos = ConfiguracionPagos.objects.first()
+        except ConfiguracionPagos.DoesNotExist:
+            config_pagos = None
 
-        messages.success(
-            request,
-            f'¡Pedido #{carrito.numero_pedido} confirmado exitosamente! Total: ₲{carrito.total:,.0f}'
-        )
-        return redirect('productos:mis_pedidos')
+        if request.method == 'POST':
+            # Obtener datos del formulario
+            metodo_pago = request.POST.get('metodo_pago')
+            nombre_completo = request.POST.get('nombre_completo')
+            email = request.POST.get('email')
+            telefono = request.POST.get('telefono')
+            direccion_envio = request.POST.get('direccion_envio', '')
+            ciudad = request.POST.get('ciudad', '')
+            notas = request.POST.get('notas', '')
+            comprobante = request.FILES.get('comprobante_pago')
+
+            # Validaciones básicas
+            if not metodo_pago or not nombre_completo or not email or not telefono:
+                messages.error(request, 'Por favor completa todos los campos obligatorios.')
+                return redirect('productos:confirmar_pedido')
+
+            # Si hay productos físicos O es pago en puerta, validar dirección
+            if not solo_digitales or metodo_pago == 'CONTRA_ENTREGA':
+                if not direccion_envio or not ciudad:
+                    messages.error(request, 'La dirección y ciudad son obligatorias.')
+                    return redirect('productos:confirmar_pedido')
+
+            # Si es transferencia, validar comprobante
+            if metodo_pago == 'TRANSFERENCIA' and not comprobante:
+                messages.error(request, 'Por favor sube el comprobante de pago.')
+                return redirect('productos:confirmar_pedido')
+
+            # Validar stock y confirmar pedido
+            with transaction.atomic():
+                for item in items:
+                    if not item.producto.tiene_stock(item.cantidad):
+                        messages.error(
+                            request,
+                            f'Stock insuficiente para {item.producto.nombre}.'
+                        )
+                        return redirect('productos:ver_carrito')
+
+                # Actualizar pedido
+                carrito.nombre_completo = nombre_completo
+                carrito.email = email
+                carrito.telefono = telefono
+                carrito.direccion_envio = direccion_envio
+                carrito.ciudad = ciudad
+                carrito.notas = notas
+                carrito.metodo_pago = metodo_pago
+
+                if comprobante:
+                    carrito.comprobante_pago = comprobante
+
+                carrito.estado = 'CONFIRMADO'
+                carrito.fecha_confirmacion = timezone.now()
+                carrito.save()
+
+                # Reducir stock
+                for item in items:
+                    item.producto.reducir_stock(item.cantidad)
+
+            # Enviar email (opcional)
+            try:
+                enviar_email_confirmacion(carrito)
+            except Exception as e:
+                print(f"Error enviando email: {e}")
+
+            messages.success(
+                request,
+                f'¡Pedido #{carrito.numero_pedido} confirmado exitosamente!'
+            )
+            return redirect('productos:detalle_pedido', pedido_id=carrito.id)
+
+        # GET - mostrar formulario
+        context = {
+            'carrito': carrito,
+            'items': items,
+            'solo_digitales': solo_digitales,
+            'config_pagos': config_pagos,
+        }
+
+        return render(request, 'productos/confirmar_pedido.html', context)
 
     except Pedido.DoesNotExist:
         messages.error(request, 'No tienes un carrito activo.')
         return redirect('productos:home')
-    except Exception as e:
-        messages.error(request, f'Error al confirmar el pedido: {str(e)}')
-        return redirect('productos:ver_carrito')
+
+
+def enviar_email_confirmacion(pedido):
+    """
+    Función auxiliar para enviar email de confirmación
+    """
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    asunto = f'Pedido #{pedido.numero_pedido} - Confirmación'
+    mensaje = f"""
+Hola {pedido.nombre_completo},
+
+¡Gracias por tu compra!
+
+Tu pedido #{pedido.numero_pedido} ha sido recibido y está siendo procesado.
+
+Detalles del pedido:
+- Total: ₲{pedido.total:,.0f}
+- Estado: {pedido.get_estado_display()}
+
+Te contactaremos pronto para coordinar la entrega.
+
+Saludos,
+Tu Tienda
+    """
+
+    send_mail(
+        asunto,
+        mensaje,
+        settings.DEFAULT_FROM_EMAIL,
+        [pedido.email],
+        fail_silently=True,
+    )
 
 
 @login_required

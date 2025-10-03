@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido Confirmado - Tu Tienda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .checkmark {
+            animation: checkmark 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navbar -->
+    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white">🛍️ Tu Tienda</a>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="py-12 px-4 md:px-12">
+        <div class="max-w-4xl mx-auto">
+            <!-- Mensaje de Éxito -->
+            <div class="glass-card rounded-2xl shadow-xl p-8 text-center mb-8">
+                <div class="checkmark text-8xl text-green-500 mb-4">✅</div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                    ¡Pedido Confirmado!
+                </h1>
+                <p class="text-lg text-gray-600 mb-6">
+                    Gracias por tu compra. Hemos recibido tu pedido y comprobante de pago.
+                </p>
+                <div class="inline-block bg-blue-100 px-6 py-3 rounded-full">
+                    <span class="text-sm text-gray-600">Número de pedido: </span>
+                    <span class="font-bold text-blue-600 text-xl">{{ pedido.numero_pedido }}</span>
+                </div>
+            </div>
+
+            <!-- Detalles del Pedido -->
+            <div class="glass-card rounded-2xl shadow-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Detalles del Pedido</h2>
+
+                <!-- Estado del Pedido -->
+                <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Estado del Pedido</p>
+                            <p class="text-xl font-bold text-blue-600">{{ pedido.get_estado_display }}</p>
+                        </div>
+                        <div class="text-4xl">
+                            {% if pedido.estado == 'CONFIRMADO' %}🔵
+                            {% elif pedido.estado == 'PROCESANDO' %}⚙️
+                            {% elif pedido.estado == 'ENVIADO' %}🚚
+                            {% elif pedido.estado == 'ENTREGADO' %}✅
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos del Pedido -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-gray-700 mb-3">Productos</h3>
+                    <div class="space-y-3">
+                        {% for item in pedido.items.all %}
+                        <div class="flex gap-4 p-4 bg-gray-50 rounded-lg">
+                            <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}"
+                                 class="w-20 h-20 object-cover rounded-lg"
+                                 onerror="this.src='https://placehold.co/100x100/667eea/fff?text=P'">
+                            <div class="flex-1">
+                                <p class="font-bold text-gray-800">{{ item.producto.nombre }}</p>
+                                <p class="text-sm text-gray-600">
+                                    Cantidad: {{ item.cantidad }} × ₲{{ item.precio_unitario|intcomma }}
+                                </p>
+                                <p class="text-sm font-bold text-green-600">
+                                    Subtotal: ₲{{ item.subtotal|intcomma }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="border-t pt-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xl font-semibold text-gray-700">Total:</span>
+                        <span class="text-3xl font-bold text-green-600">₲{{ pedido.total|intcomma }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de Contacto y Entrega -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Datos del Cliente -->
+                <div class="glass-card rounded-2xl shadow-xl p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">👤 Tus Datos</h3>
+                    <div class="text-sm text-gray-600 space-y-2">
+                        <p><strong>Nombre:</strong> {{ pedido.nombre_completo }}</p>
+                        <p><strong>Email:</strong> {{ pedido.email }}</p>
+                        <p><strong>Teléfono:</strong> {{ pedido.telefono }}</p>
+                        {% if pedido.direccion_envio %}
+                        <p><strong>Dirección:</strong> {{ pedido.direccion_envio }}</p>
+                        <p><strong>Ciudad:</strong> {{ pedido.ciudad }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Información de Pago -->
+                <div class="glass-card rounded-2xl shadow-xl p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">💳 Información de Pago</h3>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="text-3xl">🏦</span>
+                        <div>
+                            <p class="font-semibold">Transferencia Bancaria</p>
+                            <p class="text-xs text-gray-600">Comprobante recibido</p>
+                        </div>
+                    </div>
+                    {% if pedido.comprobante_pago %}
+                    <div class="mt-4">
+                        <p class="text-sm text-green-600 flex items-center gap-2">
+                            ✅ Comprobante enviado correctamente
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Próximos Pasos -->
+            <div class="glass-card rounded-2xl shadow-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">📅 ¿Qué Sigue?</h2>
+
+                <div class="space-y-4">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Verificación del Comprobante</h3>
+                            <p class="text-sm text-gray-600">
+                                Verificaremos tu comprobante de pago en las próximas horas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Contacto Directo</h3>
+                            <p class="text-sm text-gray-600">
+                                Te contactaremos al <strong>{{ pedido.telefono }}</strong> para coordinar los detalles.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Procesamiento</h3>
+                            <p class="text-sm text-gray-600">
+                                Una vez confirmado el pago, procesaremos tu pedido.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Entrega</h3>
+                            <p class="text-sm text-gray-600">
+                                {% if pedido.items.all.0.producto.tipo_producto == 'FISICO' %}
+                                Coordinaremos la entrega a tu dirección.
+                                {% else %}
+                                Te enviaremos el acceso al producto digital por email.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'productos:mis_pedidos' %}"
+                   class="flex-1 sm:flex-none bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full text-center shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                    📦 Ver Mis Pedidos
+                </a>
+                <a href="{% url 'productos:home' %}"
+                   class="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-full text-center shadow-lg transition duration-300">
+                    🛍️ Seguir Comprando
+                </a>
+            </div>
+
+            <!-- Info Adicional -->
+            <div class="mt-8 text-center text-sm text-gray-500">
+                <p>💡 Guarda este número de pedido para futuras consultas: <strong class="text-blue-600">{{ pedido.numero_pedido }}</strong></p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

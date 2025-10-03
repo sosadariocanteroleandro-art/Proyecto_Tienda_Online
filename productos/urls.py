@@ -29,6 +29,9 @@ urlpatterns = [
     # Mis links de afiliado
     path('mis-links/', views.mis_links_afiliado, name='mis_links_afiliado'),
 
+    # Editar perfil de vendedor/afiliado
+    path('editar-perfil/', views.editar_perfil_vendedor, name='editar_perfil_vendedor'),
+
     # Estadísticas de afiliado
     path('estadisticas/', views.estadisticas_vendedor, name='estadisticas_vendedor'),
 

@@ -88,6 +88,33 @@ class PedidoAdmin(admin.ModelAdmin):
                     'get_items_count', 'get_afiliado_info', 'get_comision',
                     'comision_pagada', 'fecha_creacion']
 
+    def get_metodo_pago_badge(self, obj):
+        if not obj.metodo_pago:
+            return format_html('<span style="color: #9ca3af;">Sin especificar</span>')
+
+        icons = {
+            'TRANSFERENCIA': '🏦',
+            'CONTRA_ENTREGA': '💵',
+            'TARJETA': '💳'
+        }
+        colors = {
+            'TRANSFERENCIA': '#3b82f6',
+            'CONTRA_ENTREGA': '#10b981',
+            'TARJETA': '#8b5cf6'
+        }
+
+        icon = icons.get(obj.metodo_pago, '💳')
+        color = colors.get(obj.metodo_pago, '#6b7280')
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{} {}</span>',
+            color,
+            icon,
+            obj.get_metodo_pago_display()
+        )
+
+    get_metodo_pago_badge.short_description = 'Método de Pago'
+
     list_filter = ['estado', 'comision_pagada', 'fecha_creacion', 'fecha_confirmacion']
 
     search_fields = ['numero_pedido', 'usuario__username', 'nombre_completo', 'email',
@@ -102,7 +129,7 @@ class PedidoAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Información del Pedido', {
-            'fields': ('numero_pedido', 'usuario', 'estado', 'total',
+            'fields': ('numero_pedido', 'usuario', 'estado','metodo_pago', 'total',
                        'fecha_creacion', 'fecha_actualizacion')
         }),
         ('Información de Entrega', {
@@ -125,7 +152,7 @@ class PedidoAdmin(admin.ModelAdmin):
     )
 
     actions = ['marcar_confirmado', 'marcar_procesando', 'marcar_enviado',
-               'marcar_entregado', 'marcar_comision_pagada', 'exportar_csv']
+               'marcar_entregado', 'marcar_comision_pagada', 'cancelar_pedido', 'exportar_csv']
 
     def get_estado_badge(self, obj):
         colors = {
@@ -146,8 +173,10 @@ class PedidoAdmin(admin.ModelAdmin):
     get_estado_badge.short_description = 'Estado'
 
     def get_total_formateado(self, obj):
-        total_formateado = f'{obj.total:,.0f}'
-        return format_html('<strong style="color: #10b981; font-size: 14px;">₲{}</strong>', total_formateado)
+        # ✅ CORREGIDO: Formatear PRIMERO como string, LUEGO pasar a format_html
+        total = float(obj.total)
+        total_formateado = f'₲{total:,.0f}'
+        return format_html('<strong style="color: #10b981; font-size: 14px;">{}</strong>', total_formateado)
 
     get_total_formateado.short_description = 'Total'
 
@@ -168,12 +197,15 @@ class PedidoAdmin(admin.ModelAdmin):
     get_afiliado_info.short_description = 'Afiliado'
 
     def get_comision(self, obj):
-        if obj.comision_total > 0:
+        # ✅ CORREGIDO: Formatear PRIMERO como string, LUEGO pasar a format_html
+        comision = float(obj.comision_total) if obj.comision_total else 0
+        if comision > 0:
             color = '#10b981' if obj.comision_pagada else '#f59e0b'
+            comision_formateada = f'₲{comision:,.0f}'
             return format_html(
-                '<strong style="color: {};">₲{:,.0f}</strong>',
+                '<strong style="color: {};">{}</strong>',
                 color,
-                obj.comision_total
+                comision_formateada
             )
         return format_html('<span style="color: #9ca3af;">₲0</span>')
 
@@ -209,7 +241,7 @@ class PedidoAdmin(admin.ModelAdmin):
     def marcar_comision_pagada(self, request, queryset):
         pedidos_con_comision = queryset.filter(afiliado_referido__isnull=False, comision_pagada=False)
         updated = pedidos_con_comision.update(comision_pagada=True)
-        total_comision = sum(p.comision_total for p in pedidos_con_comision)
+        total_comision = sum(float(p.comision_total) for p in pedidos_con_comision)
         self.message_user(
             request,
             f'Comisión pagada en {updated} pedido(s). Total: ₲{total_comision:,.0f}'
@@ -237,10 +269,10 @@ class PedidoAdmin(admin.ModelAdmin):
                 pedido.get_estado_display(),
                 pedido.usuario.username,
                 pedido.email or 'N/A',
-                f'₲{pedido.total:,.0f}',
+                f'₲{float(pedido.total):,.0f}',
                 pedido.items.count(),
                 pedido.afiliado_referido.username if pedido.afiliado_referido else 'N/A',
-                f'₲{pedido.comision_total:,.0f}',
+                f'₲{float(pedido.comision_total):,.0f}',
                 'Sí' if pedido.comision_pagada else 'No',
                 pedido.fecha_creacion.strftime('%Y-%m-%d %H:%M')
             ])
@@ -248,6 +280,34 @@ class PedidoAdmin(admin.ModelAdmin):
         return response
 
     exportar_csv.short_description = "📊 Exportar a CSV"
+
+    def cancelar_pedido(self, request, queryset):
+        """Cancelar pedidos y devolver stock automáticamente"""
+        cancelados = 0
+        for pedido in queryset.exclude(estado='CANCELADO'):
+            # Devolver stock de cada item
+            for item in pedido.items.all():
+                if item.producto.tipo_producto == 'FISICO':
+                    item.producto.stock += item.cantidad
+                    item.producto.save()
+
+            # Marcar como cancelado
+            pedido.estado = 'CANCELADO'
+            pedido.save()
+            cancelados += 1
+
+        self.message_user(
+            request,
+            f'✅ {cancelados} pedido(s) cancelado(s) y stock devuelto correctamente'
+        )
+
+    cancelar_pedido.short_description = "❌ Cancelar pedidos y devolver stock"
+
+    def has_delete_permission(self, request, obj=None):
+        """Solo permitir eliminar pedidos pendientes o cancelados"""
+        if obj and obj.estado not in ['PENDIENTE', 'CANCELADO']:
+            return False
+        return super().has_delete_permission(request, obj)
 
 
 @admin.register(ItemPedido)

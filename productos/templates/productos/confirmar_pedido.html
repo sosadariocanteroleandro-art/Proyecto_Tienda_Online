@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load humanize %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Pedido - Tu Tienda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navbar Simple -->
+    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white">🛍️ Tu Tienda</a>
+            <span class="text-white font-medium">Confirmar Pedido</span>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="py-12 px-4 md:px-12">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8 text-center">
+                💳 Confirmar tu Pedido
+            </h1>
+
+            <!-- Mensajes -->
+            {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                <div class="p-4 rounded-lg mb-2 {% if message.tags == 'success' %}bg-green-100 text-green-800{% elif message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Columna Izquierda: Formulario -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <!-- Datos del Cliente -->
+                        <div class="glass-card rounded-2xl shadow-xl p-6">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Tus Datos</h2>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Nombre Completo <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="nombre_completo" required
+                                           value="{{ request.user.get_full_name }}"
+                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                           placeholder="Juan Pérez">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                            Email <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="email" name="email" required
+                                               value="{{ request.user.email }}"
+                                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                               placeholder="juan@email.com">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                            Teléfono <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="tel" name="telefono" required
+                                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                               placeholder="+595 981 234567">
+                                    </div>
+                                </div>
+
+                                {% if not solo_digitales %}
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Ciudad <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="ciudad" required
+                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                           placeholder="Asunción">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Dirección de Entrega <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea name="direccion_envio" required rows="3"
+                                              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                              placeholder="Calle, número, barrio, referencias..."></textarea>
+                                </div>
+                                {% endif %}
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Notas adicionales (opcional)
+                                    </label>
+                                    <textarea name="notas" rows="2"
+                                              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
+                                              placeholder="Alguna indicación especial..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Datos Bancarios y Comprobante -->
+                        <div class="glass-card rounded-2xl shadow-xl p-6">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-6">🏦 Datos para Transferencia</h2>
+
+                            {% if config_pagos %}
+                            <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                                <div class="space-y-3 text-gray-700">
+                                    <div class="flex justify-between border-b pb-2">
+                                        <span class="font-semibold">Banco:</span>
+                                        <span class="text-right">{{ config_pagos.banco_nombre }}</span>
+                                    </div>
+                                    <div class="flex justify-between border-b pb-2">
+                                        <span class="font-semibold">Cuenta:</span>
+                                        <span class="text-right font-mono">{{ config_pagos.banco_cuenta }}</span>
+                                    </div>
+                                    <div class="flex justify-between border-b pb-2">
+                                        <span class="font-semibold">Titular:</span>
+                                        <span class="text-right">{{ config_pagos.banco_titular }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="font-semibold">CI/RUC:</span>
+                                        <span class="text-right">{{ config_pagos.banco_cedula }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+                                <p class="text-yellow-800">
+                                    <strong>Nota:</strong> Los datos bancarios serán proporcionados por el vendedor.
+                                </p>
+                            </div>
+                            {% endif %}
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Subir Comprobante de Pago <span class="text-red-500">*</span>
+                                </label>
+                                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition duration-200">
+                                    <input type="file" name="comprobante_pago" accept="image/*" required
+                                           class="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer">
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        💡 Sube una foto clara del comprobante de transferencia (JPG, PNG)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón de Confirmar -->
+                        <button type="submit"
+                                class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-xl transition duration-300 transform hover:scale-105">
+                            ✅ Confirmar Pedido y Enviar Comprobante
+                        </button>
+                    </div>
+
+                    <!-- Columna Derecha: Resumen -->
+                    <div class="lg:col-span-1">
+                        <div class="glass-card rounded-2xl shadow-xl p-6 sticky top-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">📦 Resumen del Pedido</h2>
+
+                            <!-- Productos -->
+                            <div class="space-y-3 mb-6 max-h-64 overflow-y-auto">
+                                {% for item in items %}
+                                <div class="flex gap-3 pb-3 border-b">
+                                    <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}"
+                                         class="w-16 h-16 object-cover rounded-lg"
+                                         onerror="this.src='https://placehold.co/100x100/667eea/fff?text=P'">
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-sm text-gray-800">{{ item.producto.nombre }}</p>
+                                        <p class="text-xs text-gray-500">Cantidad: {{ item.cantidad }}</p>
+                                        <p class="text-sm font-bold text-green-600">₲{{ item.subtotal|intcomma }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Total -->
+                            <div class="space-y-2 mb-4 pb-4 border-b">
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Subtotal:</span>
+                                    <span>₲{{ carrito.total|intcomma }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-600">
+                                    <span>Items:</span>
+                                    <span>{{ items|length }}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between text-2xl font-bold text-green-600 mb-4">
+                                <span>Total:</span>
+                                <span>₲{{ carrito.total|intcomma }}</span>
+                            </div>
+
+                            <div class="text-xs text-gray-500 space-y-1">
+                                <p>✅ Compra 100% segura</p>
+                                <p>✅ Verificamos tu comprobante</p>
+                                {% if not solo_digitales %}
+                                <p>✅ Envío a todo el país</p>
+                                {% else %}
+                                <p>✅ Entrega instantánea</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Botón Volver -->
+            <div class="mt-8 text-center">
+                <a href="{% url 'productos:ver_carrito' %}" class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-full transition duration-300">
+                    ← Volver al Carrito
+                </a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

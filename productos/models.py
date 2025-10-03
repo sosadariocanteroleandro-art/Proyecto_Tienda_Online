@@ -125,6 +125,28 @@ class Pedido(models.Model):
     direccion_envio = models.TextField(blank=True, verbose_name='Dirección de entrega')
     ciudad = models.CharField(max_length=100, blank=True, verbose_name='Ciudad')
 
+    METODO_PAGO_CHOICES = (
+        ('TRANSFERENCIA', 'Transferencia Bancaria'),
+        ('CONTRA_ENTREGA', 'Pago en Puerta'),
+        ('TARJETA', 'Tarjeta de Crédito/Débito'),
+    )
+
+    metodo_pago = models.CharField(
+        max_length=20,
+        choices=METODO_PAGO_CHOICES,
+        blank=True,
+        null=True,
+        verbose_name='Método de Pago'
+    )
+
+    comprobante_pago = models.ImageField(
+        upload_to='comprobantes/',
+        null=True,
+        blank=True,
+        verbose_name='Comprobante de Pago',
+        help_text='Imagen del comprobante de transferencia'
+    )
+
     # Sistema de referidos - SIMPLIFICADO
     afiliado_referido = models.ForeignKey(
         settings.AUTH_USER_MODEL,
