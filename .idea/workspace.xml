@@ -5,13 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_pedido.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/confirmacion_pedido.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/productos/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/productos/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/views.py" afterDir="false" />
     </list>
@@ -131,11 +125,6 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/productos/views.py</url>
-          <line>544</line>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/admin.py</url>
           <line>85</line>
           <option name="timeStamp" value="23" />
@@ -152,13 +141,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/views.py</url>
-          <line>510</line>
-          <option name="timeStamp" value="27" />
+          <line>333</line>
+          <option name="timeStamp" value="31" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/views.py</url>
-          <line>396</line>
-          <option name="timeStamp" value="28" />
+          <line>251</line>
+          <option name="timeStamp" value="32" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

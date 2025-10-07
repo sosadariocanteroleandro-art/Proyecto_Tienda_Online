@@ -55,4 +55,7 @@ urlpatterns = [
 
     # Ver mis pedidos
     path('mis-pedidos/', views.mis_pedidos, name='mis_pedidos'),
+
+    # Detalle de pedido confirmado
+    path('pedido/<int:pedido_id>/', views.detalle_pedido, name='detalle_pedido'),
 ]

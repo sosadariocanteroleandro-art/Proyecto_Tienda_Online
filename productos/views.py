@@ -250,6 +250,7 @@ def estadisticas_vendedor(request):
 # ============================================================================
 
 @login_required
+@login_required
 def agregar_al_carrito(request, producto_id):
     """Agregar producto al carrito con validación de stock"""
     if request.method == 'POST':
@@ -325,10 +326,10 @@ def agregar_al_carrito(request, producto_id):
             )
             messages.success(request, f'{producto.nombre} agregado al carrito.')
 
+        # Redirigir al carrito después de agregar
         return redirect('productos:ver_carrito')
 
     return redirect('productos:detalle_producto', producto_id=producto_id)
-
 
 @login_required
 def ver_carrito(request):
@@ -550,3 +551,19 @@ def mis_pedidos(request):
     ).exclude(estado='PENDIENTE').order_by('-fecha_creacion')
 
     return render(request, 'productos/mis_pedidos.html', {'pedidos': pedidos})
+
+
+@login_required
+def detalle_pedido(request, pedido_id):
+    """Ver detalles de un pedido confirmado"""
+    pedido = get_object_or_404(
+        Pedido,
+        id=pedido_id,
+        usuario=request.user
+    )
+
+    if pedido.estado == 'PENDIENTE':
+        messages.warning(request, 'Este pedido aún no ha sido confirmado.')
+        return redirect('productos:ver_carrito')
+
+    return render(request, 'productos/detalle_pedido.html', {'pedido': pedido})
