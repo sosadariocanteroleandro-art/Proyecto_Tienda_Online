@@ -5,9 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/productos/templates/productos/mis_pedidos.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/templates/includes/sidebar.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/home.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/afiliarme.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/afiliarme.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/carrito.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/carrito.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/crear_perfil_vendedor.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/crear_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/crear_producto.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/detalle_pedido.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_pedido.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/editar_perfil_vendedor.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/mis_productos.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/mis_productos.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,6 +163,11 @@
           <url>file://$PROJECT_DIR$/productos/views.py</url>
           <line>251</line>
           <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/productos/models.py</url>
+          <line>7</line>
+          <option name="timeStamp" value="35" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

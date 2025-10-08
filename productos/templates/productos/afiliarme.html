@@ -1,469 +1,322 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    {% load humanize %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Afiliarme - Tu Tienda</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
-        .glass-card {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .product-card {
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-        .nav-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .sidebar {
-            width: 0;
-            transition: all 0.3s ease-in-out;
-            transform: translateX(-100%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .sidebar.open {
-            width: 280px;
-            transform: translateX(0);
-        }
-        .overlay {
-            display: none;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .overlay.visible {
-            display: block;
-        }
-        .search-input {
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
-        }
-        .search-input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .affiliate-btn-fisico {
-            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-            transition: all 0.3s ease;
-        }
-        .affiliate-btn-fisico:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        }
-        .affiliate-btn-digital {
-            background: linear-gradient(45deg, #10b981, #059669);
-            transition: all 0.3s ease;
-        }
-        .affiliate-btn-digital:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-        .message-success {
-            animation: slideDown 0.5s ease-out;
-        }
-        @keyframes slideDown {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        .stats-card {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
-        }
-        .badge-fisico {
-            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
-        }
-        .badge-digital {
-            background: linear-gradient(45deg, #10b981, #059669);
-        }
-        .floating-stats {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 40;
-        }
-    </style>
-</head>
-<body class="min-h-screen relative">
-    <!-- Overlay -->
-    <div id="overlay" class="overlay fixed inset-0 z-40 hidden"></div>
+{% extends 'base.html' %}
+{% load humanize %}
 
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full shadow-xl z-50 overflow-y-auto text-white">
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-8">
-                <span class="text-xl font-bold">Menú Principal</span>
-                <button id="close-menu" class="text-white hover:text-gray-200 transition duration-300">
-                    ✖
+{% block title %}Afiliarme - Tu Tienda{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            🚀 Afíliate y Gana Dinero
+        </h1>
+        <p class="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
+            Únete a nuestro programa de afiliados y comienza a generar ingresos promocionando productos increíbles.
+            Es <span class="font-bold text-green-600">completamente gratis</span> y sin compromisos.
+        </p>
+
+        <!-- Stats Overview -->
+        <div class="stats-card rounded-2xl p-6 max-w-4xl mx-auto shadow-lg">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-blue-600">{{ productos_fisicos|length|add:productos_digitales|length }}</div>
+                    <div class="text-gray-600 font-medium">Productos Disponibles</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-green-600">15%</div>
+                    <div class="text-gray-600 font-medium">Comisión Promedio</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-purple-600">24/7</div>
+                    <div class="text-gray-600 font-medium">Soporte Disponible</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="glass-card rounded-2xl p-6 mb-8 shadow-lg">
+        <div class="flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex gap-2">
+                <button onclick="showAll()" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-blue-600">
+                    Todos los Productos
+                </button>
+                <button onclick="showFisicos()" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
+                    Solo Físicos ({{ productos_fisicos|length }})
+                </button>
+                <button onclick="showDigitales()" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
+                    Solo Digitales ({{ productos_digitales|length }})
                 </button>
             </div>
-            <nav class="space-y-3">
-                <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">🏠 Inicio</span>
-                </a>
-                <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">📦 Mis Productos</span>
-                </a>
-                <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">🤝 Afiliarme</span>
-                </a>
-
-                {% if request.user.is_authenticated %}
-                <a href="{% url 'productos:crear_producto' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">💼 Volverse Vendedor</span>
-                </a>
-                {% endif %}
-
-                <div class="mt-6 pt-6 border-t border-white border-opacity-30">
-                    {% if request.user.is_authenticated %}
-                        <div class="mb-4 text-sm text-gray-200">
-                            👤 {{ request.user.username }}
-                        </div>
-                        <form action="{% url 'usuarios:logout' %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
-                                🚪 Cerrar Sesión
-                            </button>
-                        </form>
-                    {% else %}
-                        <a href="{% url 'usuarios:login' %}" class="block w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300 text-center">
-                            🔐 Iniciar Sesión
-                        </a>
-                    {% endif %}
-                </div>
-            </nav>
+            <div class="text-sm text-gray-600 font-medium">
+                💡 Tip: Los productos digitales suelen tener mayor margen de ganancia
+            </div>
         </div>
     </div>
 
-    <!-- Navbar -->
-    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12 fixed top-0 w-full z-50">
-        <div class="flex justify-between items-center max-w-7xl mx-auto">
-            <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300">☰</button>
-            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
-            <div class="hidden md:flex items-center space-x-4">
-                <span class="text-white font-medium">Afiliarme</span>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Messages -->
-    {% if messages %}
-    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
-        {% for message in messages %}
-        <div class="message-success bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-xl shadow-2xl mb-4 border-l-4 border-green-300">
+    <!-- Productos Físicos -->
+    <div id="seccion-fisicos" class="mb-16">
+        <div class="flex items-center justify-between mb-8">
             <div class="flex items-center">
-                <div class="text-2xl mr-3">✅</div>
-                <div>
-                    <p class="font-semibold">¡Éxito!</p>
-                    <p class="text-sm">{{ message }}</p>
-                </div>
+                <h2 class="text-3xl font-bold text-gray-800 mr-4">📦 Productos Físicos</h2>
+                <span class="badge-fisico text-white text-sm font-bold px-3 py-1 rounded-full">
+                    {{ productos_fisicos|length }} disponible{{ productos_fisicos|length|pluralize }}
+                </span>
+            </div>
+            <div class="text-sm text-gray-600">
+                Comisión: <span class="font-bold text-blue-600">10-20%</span>
             </div>
         </div>
-        {% endfor %}
+
+        {% if productos_fisicos %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for producto in productos_fisicos %}
+            <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group">
+                <div class="relative">
+                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                         onerror="this.src='https://placehold.co/600x400/3b82f6/fff?text={{ producto.nombre|slice:':3' }}'">
+                    <div class="absolute top-3 right-3">
+                        <span class="badge-fisico text-white text-xs font-bold px-3 py-1 rounded-full">📦 Físico</span>
+                    </div>
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">⭐ Popular</span>
+                    </div>
+                </div>
+
+                <div class="p-5">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-600 transition duration-300">
+                        {{ producto.nombre }}
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion }}</p>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
+                            <div class="text-xs text-gray-500">Tu comisión: ~₲{{ producto.precio|floatformat:0|add:"000"|slice:":-3" }}0</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-xs text-gray-600">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                            Envío rápido disponible
+                        </div>
+                        <div class="flex items-center text-xs text-gray-600">
+                            <span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+                            Material promocional incluido
+                        </div>
+                    </div>
+
+                    <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post"
+                          onsubmit="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="affiliate-btn-fisico w-full text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
+                            🚀 Afiliarme Ahora
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl">
+            <div class="text-4xl mb-4">📦</div>
+            <p class="text-gray-600 text-lg">No hay productos físicos disponibles en este momento.</p>
+            <p class="text-gray-500 text-sm mt-2">¡Pronto agregaremos más productos increíbles!</p>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 
-    <!-- Contenido -->
-    <main class="pt-24 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-                🚀 Afíliate y Gana Dinero
-            </h1>
-            <p class="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
-                Únete a nuestro programa de afiliados y comienza a generar ingresos promocionando productos increíbles.
-                Es <span class="font-bold text-green-600">completamente gratis</span> y sin compromisos.
-            </p>
-
-            <!-- Stats Overview -->
-            <div class="stats-card rounded-2xl p-6 max-w-4xl mx-auto shadow-lg">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-blue-600">{{ productos_fisicos|length|add:productos_digitales|length }}</div>
-                        <div class="text-gray-600 font-medium">Productos Disponibles</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-green-600">15%</div>
-                        <div class="text-gray-600 font-medium">Comisión Promedio</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-purple-600">24/7</div>
-                        <div class="text-gray-600 font-medium">Soporte Disponible</div>
-                    </div>
-                </div>
+    <!-- Productos Digitales -->
+    <div id="seccion-digitales">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center">
+                <h2 class="text-3xl font-bold text-gray-800 mr-4">💻 Productos Digitales</h2>
+                <span class="badge-digital text-white text-sm font-bold px-3 py-1 rounded-full">
+                    {{ productos_digitales|length }} disponible{{ productos_digitales|length|pluralize }}
+                </span>
+            </div>
+            <div class="text-sm text-gray-600">
+                Comisión: <span class="font-bold text-green-600">15-30%</span>
             </div>
         </div>
 
-        <!-- Filtros y búsqueda -->
-        <div class="glass-card rounded-2xl p-6 mb-8 shadow-lg">
-            <div class="flex flex-wrap gap-4 items-center justify-between">
-                <div class="flex gap-2">
-                    <button onclick="showAll()" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-blue-600">
-                        Todos los Productos
-                    </button>
-                    <button onclick="showFisicos()" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
-                        Solo Físicos ({{ productos_fisicos|length }})
-                    </button>
-                    <button onclick="showDigitales()" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
-                        Solo Digitales ({{ productos_digitales|length }})
-                    </button>
+        {% if productos_digitales %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for producto in productos_digitales %}
+            <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group">
+                <div class="relative">
+                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                         onerror="this.src='https://placehold.co/600x400/10b981/fff?text={{ producto.nombre|slice:':3' }}'">
+                    <div class="absolute top-3 right-3">
+                        <span class="badge-digital text-white text-xs font-bold px-3 py-1 rounded-full">💻 Digital</span>
+                    </div>
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">🔥 Trending</span>
+                    </div>
                 </div>
-                <div class="text-sm text-gray-600 font-medium">
-                    💡 Tip: Los productos digitales suelen tener mayor margen de ganancia
-                </div>
-            </div>
-        </div>
 
-        <!-- Productos Físicos -->
-        <div id="seccion-fisicos" class="mb-16">
-            <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center">
-                    <h2 class="text-3xl font-bold text-gray-800 mr-4">📦 Productos Físicos</h2>
-                    <span class="badge-fisico text-white text-sm font-bold px-3 py-1 rounded-full">
-                        {{ productos_fisicos|length }} disponible{{ productos_fisicos|length|pluralize }}
-                    </span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    Comisión: <span class="font-bold text-blue-600">10-20%</span>
-                </div>
-            </div>
+                <div class="p-5">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-green-600 transition duration-300">
+                        {{ producto.nombre }}
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion }}</p>
 
-            {% if productos_fisicos %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {% for producto in productos_fisicos %}
-                <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group producto-item" data-name="{{ producto.nombre|lower }}">
-                    <div class="relative">
-                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
-                             onerror="this.src='https://placehold.co/600x400/3b82f6/fff?text={{ producto.nombre|slice:':3' }}'">
-                        <div class="absolute top-3 right-3">
-                            <span class="badge-fisico text-white text-xs font-bold px-3 py-1 rounded-full">📦 Físico</span>
-                        </div>
-                        <div class="absolute top-3 left-3">
-                            <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">⭐ Popular</span>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
+                            <div class="text-xs text-gray-500">Tu comisión: ~₲{{ producto.precio|floatformat:0|add:"000"|slice:":-3" }}5</div>
                         </div>
                     </div>
 
-                    <div class="p-5">
-                        <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-600 transition duration-300">
-                            {{ producto.nombre }}
-                        </h3>
-                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion }}</p>
-
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
-                                <div class="text-xs text-gray-500">Tu comisión: ~₲{{ producto.precio|floatformat:0|add:"000"|slice:":-3" }}0</div>
-                            </div>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-xs text-gray-600">
+                            <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                            Entrega instantánea
                         </div>
-
-                        <div class="space-y-2">
-                            <div class="flex items-center text-xs text-gray-600">
-                                <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-                                Envío rápido disponible
-                            </div>
-                            <div class="flex items-center text-xs text-gray-600">
-                                <span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
-                                Material promocional incluido
-                            </div>
-                        </div>
-
-                        <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post"
-                              onsubmit="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="affiliate-btn-fisico mt-4 w-full text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
-                                🚀 Afiliarme Ahora
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-12 bg-gray-50 rounded-2xl">
-                <div class="text-4xl mb-4">📦</div>
-                <p class="text-gray-600 text-lg">No hay productos físicos disponibles en este momento.</p>
-                <p class="text-gray-500 text-sm mt-2">¡Pronto agregaremos más productos increíbles!</p>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Productos Digitales -->
-        <div id="seccion-digitales">
-            <div class="flex items-center justify-between mb-8">
-                <div class="flex items-center">
-                    <h2 class="text-3xl font-bold text-gray-800 mr-4">💻 Productos Digitales</h2>
-                    <span class="badge-digital text-white text-sm font-bold px-3 py-1 rounded-full">
-                        {{ productos_digitales|length }} disponible{{ productos_digitales|length|pluralize }}
-                    </span>
-                </div>
-                <div class="text-sm text-gray-600">
-                    Comisión: <span class="font-bold text-green-600">15-30%</span>
-                </div>
-            </div>
-
-            {% if productos_digitales %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {% for producto in productos_digitales %}
-                <div class="glass-card product-card rounded-2xl shadow-lg overflow-hidden group producto-item" data-name="{{ producto.nombre|lower }}">
-                    <div class="relative">
-                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
-                             onerror="this.src='https://placehold.co/600x400/10b981/fff?text={{ producto.nombre|slice:':3' }}'">
-                        <div class="absolute top-3 right-3">
-                            <span class="badge-digital text-white text-xs font-bold px-3 py-1 rounded-full">💻 Digital</span>
-                        </div>
-                        <div class="absolute top-3 left-3">
-                            <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">🔥 Trending</span>
+                        <div class="flex items-center text-xs text-gray-600">
+                            <span class="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
+                            Mayor margen de ganancia
                         </div>
                     </div>
 
-                    <div class="p-5">
-                        <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-green-600 transition duration-300">
-                            {{ producto.nombre }}
-                        </h3>
-                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion }}</p>
-
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
-                                <div class="text-xs text-gray-500">Tu comisión: ~₲{{ producto.precio|floatformat:0|add:"000"|slice:":-3" }}5</div>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <div class="flex items-center text-xs text-gray-600">
-                                <span class="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
-                                Entrega instantánea
-                            </div>
-                            <div class="flex items-center text-xs text-gray-600">
-                                <span class="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
-                                Mayor margen de ganancia
-                            </div>
-                        </div>
-
-                        <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post"
-                              onsubmit="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="affiliate-btn-digital mt-4 w-full text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
-                                💎 Afiliarme Ahora
-                            </button>
-                        </form>
-                    </div>
+                    <form action="{% url 'productos:afiliar_producto' producto.id %}" method="post"
+                          onsubmit="return confirm('¿Confirmas que quieres afiliarte a {{ producto.nombre }}?')">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="affiliate-btn-digital w-full text-white py-3 px-4 rounded-xl text-center font-bold text-sm transition duration-300 transform hover:scale-105">
+                            💎 Afiliarme Ahora
+                        </button>
+                    </form>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="text-center py-12 bg-gray-50 rounded-2xl">
-                <div class="text-4xl mb-4">💻</div>
-                <p class="text-gray-600 text-lg">No hay productos digitales disponibles en este momento.</p>
-                <p class="text-gray-500 text-sm mt-2">¡Pronto agregaremos más productos increíbles!</p>
-            </div>
-            {% endif %}
+            {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl">
+            <div class="text-4xl mb-4">💻</div>
+            <p class="text-gray-600 text-lg">No hay productos digitales disponibles en este momento.</p>
+            <p class="text-gray-500 text-sm mt-2">¡Pronto agregaremos más productos increíbles!</p>
+        </div>
+        {% endif %}
+    </div>
 
-        <!-- CTA Final -->
-        <div class="glass-card rounded-3xl p-8 mt-16 text-center shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">🎯 ¿Listo para comenzar a generar ingresos?</h3>
-            <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
-                Únete a miles de afiliados que ya están generando ingresos pasivos con nuestros productos.
-                Sin costos iniciales, sin compromisos a largo plazo.
-            </p>
-            <div class="flex flex-wrap gap-4 justify-center">
-                <div class="text-center">
-                    <div class="text-xl font-bold text-green-600">₲2.5M+</div>
-                    <div class="text-sm text-gray-600">Generado por afiliados</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-xl font-bold text-blue-600">500+</div>
-                    <div class="text-sm text-gray-600">Afiliados activos</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-xl font-bold text-purple-600">4.8★</div>
-                    <div class="text-sm text-gray-600">Calificación promedio</div>
-                </div>
+    <!-- CTA Final -->
+    <div class="glass-card rounded-3xl p-8 mt-16 text-center shadow-2xl">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">🎯 ¿Listo para comenzar a generar ingresos?</h3>
+        <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
+            Únete a miles de afiliados que ya están generando ingresos pasivos con nuestros productos.
+            Sin costos iniciales, sin compromisos a largo plazo.
+        </p>
+        <div class="flex flex-wrap gap-4 justify-center">
+            <div class="text-center">
+                <div class="text-xl font-bold text-green-600">₲2.5M+</div>
+                <div class="text-sm text-gray-600">Generado por afiliados</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xl font-bold text-blue-600">500+</div>
+                <div class="text-sm text-gray-600">Afiliados activos</div>
+            </div>
+            <div class="text-center">
+                <div class="text-xl font-bold text-purple-600">4.8★</div>
+                <div class="text-sm text-gray-600">Calificación promedio</div>
             </div>
         </div>
-    </main>
+    </div>
+{% endblock %}
 
-    <!-- Scripts -->
-    <script>
-        // Sidebar functionality
-        const openMenuBtn = document.getElementById('open-menu');
-        const closeMenuBtn = document.getElementById('close-menu');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .affiliate-btn-fisico {
+        background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+        transition: all 0.3s ease;
+    }
+    .affiliate-btn-fisico:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+    .affiliate-btn-digital {
+        background: linear-gradient(45deg, #10b981, #059669);
+        transition: all 0.3s ease;
+    }
+    .affiliate-btn-digital:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+    .message-success {
+        animation: slideDown 0.5s ease-out;
+    }
+    @keyframes slideDown {
+        from { transform: translateY(-20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    .stats-card {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+    }
+    .badge-fisico {
+        background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+    }
+    .badge-digital {
+        background: linear-gradient(45deg, #10b981, #059669);
+    }
+</style>
+{% endblock %}
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('visible');
-            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
-        }
+{% block extra_js %}
+<script>
+    function updateFilterButtons(activeBtn) {
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        filterBtns.forEach(btn => {
+            btn.classList.remove('bg-blue-500', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700');
+        });
+        activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        activeBtn.classList.add('bg-blue-500', 'text-white');
+    }
 
-        openMenuBtn.addEventListener('click', toggleSidebar);
-        closeMenuBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
+    function showAll() {
+        document.getElementById('seccion-fisicos').style.display = 'block';
+        document.getElementById('seccion-digitales').style.display = 'block';
+        updateFilterButtons(event.target);
+    }
 
-        // Filter functionality
-        function updateFilterButtons(activeBtn) {
-            const filterBtns = document.querySelectorAll('.filter-btn');
-            filterBtns.forEach(btn => {
-                btn.classList.remove('bg-blue-500', 'text-white');
-                btn.classList.add('bg-gray-200', 'text-gray-700');
-            });
-            activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
-            activeBtn.classList.add('bg-blue-500', 'text-white');
-        }
+    function showFisicos() {
+        document.getElementById('seccion-fisicos').style.display = 'block';
+        document.getElementById('seccion-digitales').style.display = 'none';
+        updateFilterButtons(event.target);
+    }
 
-        function showAll() {
-            document.getElementById('seccion-fisicos').style.display = 'block';
-            document.getElementById('seccion-digitales').style.display = 'block';
-            updateFilterButtons(event.target);
-        }
+    function showDigitales() {
+        document.getElementById('seccion-fisicos').style.display = 'none';
+        document.getElementById('seccion-digitales').style.display = 'block';
+        updateFilterButtons(event.target);
+    }
 
-        function showFisicos() {
-            document.getElementById('seccion-fisicos').style.display = 'block';
-            document.getElementById('seccion-digitales').style.display = 'none';
-            updateFilterButtons(event.target);
-        }
+    setTimeout(() => {
+        const messages = document.querySelectorAll('.message-success');
+        messages.forEach(message => {
+            message.style.animation = 'slideUp 0.5s ease-in forwards';
+        });
+    }, 5000);
 
-        function showDigitales() {
-            document.getElementById('seccion-fisicos').style.display = 'none';
-            document.getElementById('seccion-digitales').style.display = 'block';
-            updateFilterButtons(event.target);
-        }
-
-        // Auto-hide messages after 5 seconds
-        setTimeout(() => {
-            const messages = document.querySelectorAll('.message-success');
-            messages.forEach(message => {
-                message.style.animation = 'slideUp 0.5s ease-in forwards';
-            });
-        }, 5000);
-
-        // Add slideUp animation for messages
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideUp {
-                to {
-                    transform: translateY(-20px);
-                    opacity: 0;
-                    display: none;
-                }
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideUp {
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+                display: none;
             }
-        `;
-        document.head.appendChild(style);
-    </script>
-</body>
-</html>
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

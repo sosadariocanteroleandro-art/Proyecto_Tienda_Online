@@ -1,0 +1,59 @@
+<aside id="sidebar" class="sidebar fixed top-0 left-0 h-full z-50 text-white p-6 overflow-y-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h2 class="text-2xl font-bold">🛍️ Tu Tienda</h2>
+        <button id="close-menu" class="text-white hover:text-gray-200 text-2xl transition duration-300">×</button>
+    </div>
+
+    <nav class="space-y-3">
+        <!-- Enlaces principales -->
+        <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">🏠 Inicio</span>
+        </a>
+        <a href="{% url 'productos:home' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">🛍️ Productos</span>
+        </a>
+
+        {% if user.is_authenticated %}
+        <!-- Enlaces para usuarios autenticados -->
+        <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">🤝 Mis Productos</span>
+        </a>
+        <a href="{% url 'productos:ver_carrito' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">🛒 Mi Carrito</span>
+        </a>
+        <a href="{% url 'productos:mis_pedidos' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">📦 Mis Pedidos</span>
+        </a>
+        <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">💼 Afiliarme</span>
+        </a>
+        <a href="{% url 'productos:crear_producto' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
+            <span class="font-medium">➕ Crear Producto</span>
+        </a>
+
+        <!-- Sección de usuario -->
+        <div class="mt-6 pt-6 border-t border-white border-opacity-30">
+            <div class="mb-4 text-sm text-gray-200 px-2">
+                👤 {{ user.username }}
+            </div>
+            <form action="{% url 'usuarios:logout' %}" method="post" class="px-2">
+                {% csrf_token %}
+                <button type="submit" class="w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
+                    🚪 Cerrar Sesión
+                </button>
+            </form>
+        </div>
+
+        {% else %}
+        <!-- Sección para usuarios no autenticados -->
+        <div class="mt-6 pt-6 border-t border-white border-opacity-30 px-2">
+            <a href="{% url 'usuarios:login' %}" class="block w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300 text-center mb-3">
+                🔐 Iniciar Sesión
+            </a>
+            <a href="{% url 'usuarios:registro' %}" class="block w-full bg-transparent border border-white text-white font-semibold px-4 py-2 rounded-full hover:bg-white hover:bg-opacity-10 transition duration-300 text-center">
+                📝 Registrarse
+            </a>
+        </div>
+        {% endif %}
+    </nav>
+</aside>

@@ -3,7 +3,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomUserCreationForm
-
+from .models import Pedido  # ← Solo Pedido, Producto viene de productos
+from productos.models import Producto  # ← Importar desde productos
 
 def registro_usuario(request):
     """
@@ -45,3 +46,36 @@ def logout_view(request):
     """
     logout(request)
     return redirect('usuarios:login')
+
+def home(request):
+    """
+    Vista del Dashboard principal
+    """
+    context = {}
+
+    if request.user.is_authenticated:
+        # Estadísticas del usuario
+        context['productos_afiliados_count'] = request.user.productos_afiliados.count()
+        context['pedidos_count'] = Pedido.objects.filter(
+            usuario=request.user
+        ).exclude(estado='PENDIENTE').count()
+
+        # Comisiones totales
+        ventas_como_afiliado = Pedido.objects.filter(
+            afiliado_referido=request.user
+        ).exclude(estado='PENDIENTE')
+        context['comisiones_totales'] = sum(v.comision_total for v in ventas_como_afiliado)
+
+        # Items en carrito
+        try:
+            carrito = Pedido.objects.get(usuario=request.user, estado='PENDIENTE')
+            context['items_carrito'] = carrito.items.count()
+        except Pedido.DoesNotExist:
+            context['items_carrito'] = 0
+
+        # Últimos 5 pedidos
+        context['ultimos_pedidos'] = Pedido.objects.filter(
+            usuario=request.user
+        ).exclude(estado='PENDIENTE').order_by('-fecha_creacion')[:5]
+
+    return render(request, 'usuarios/home.html', context)

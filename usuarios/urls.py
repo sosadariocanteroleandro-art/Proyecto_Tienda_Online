@@ -6,6 +6,7 @@ from productos.views import home_tienda  # ← Importa la vista de productos
 app_name = 'usuarios'
 
 urlpatterns = [
+    path('', views.home, name='home'),
     # URL de inicio de sesión
     path('login/', views.login_view, name='login'),
 

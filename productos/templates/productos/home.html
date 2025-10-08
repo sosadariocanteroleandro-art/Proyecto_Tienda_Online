@@ -1,118 +1,10 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Tu Tienda</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
-        .glass-card {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .nav-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .sidebar {
-            width: 0;
-            transition: all 0.3s ease-in-out;
-            transform: translateX(-100%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .sidebar.open {
-            width: 280px;
-            transform: translateX(0);
-        }
-        .overlay {
-            display: none;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .overlay.visible {
-            display: block;
-        }
-        .hero-section {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        }
-        .feature-card {
-            transition: all 0.3s ease;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-    </style>
-</head>
-<body class="min-h-screen relative">
-    <!-- Overlay -->
-    <div id="overlay" class="overlay fixed inset-0 z-40 hidden"></div>
 
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar fixed top-0 left-0 h-full shadow-xl z-50 overflow-y-auto text-white">
-        <div class="p-6">
-            <div class="flex justify-between items-center mb-8">
-                <span class="text-xl font-bold">Menú Principal</span>
-                <button id="close-menu" class="text-white hover:text-gray-200 transition duration-300">
-                    ✖
-                </button>
-            </div>
-            <nav class="space-y-3">
-                <a href="{% url 'usuarios:home' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">🏠 Inicio</span>
-                </a>
-                <a href="{% url 'productos:mis_productos' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">📦 Mis Productos</span>
-                </a>
-                <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">🤝 Afiliarme</span>
-                </a>
 
-                <!-- Opción: Volverse vendedor (solo si está autenticado) -->
-                {% if request.user.is_authenticated %}
-                <a href="{% url 'productos:crear_producto' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
-                    <span class="font-medium">💼 Volverse Vendedor</span>
-                </a>
-                {% endif %}
+{% extends 'base.html' %}
 
-                <div class="mt-6 pt-6 border-t border-white border-opacity-30">
-                    {% if request.user.is_authenticated %}
-                        <div class="mb-4 text-sm text-gray-200">
-                            👤 {{ request.user.username }}
-                        </div>
-                        <form action="{% url 'usuarios:logout' %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300">
-                                🚪 Cerrar Sesión
-                            </button>
-                        </form>
-                    {% else %}
-                        <a href="{% url 'usuarios:login' %}" class="block w-full bg-white text-blue-600 font-semibold px-4 py-2 rounded-full shadow-md hover:bg-gray-100 transition duration-300 text-center">
-                            🔐 Iniciar Sesión
-                        </a>
-                    {% endif %}
-                </div>
-            </nav>
-        </div>
-    </div>
+{% block title %}Iniciar Sesión - Tu Tienda{% endblock %}
 
-    <!-- Navbar -->
-    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12 fixed top-0 w-full z-50">
-        <div class="flex justify-between items-center max-w-7xl mx-auto">
-            <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300">☰</button>
-            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
-            <div class="hidden md:flex items-center space-x-4">
-                <span class="text-white font-medium">Inicio</span>
-            </div>
-        </div>
-    </nav>
-
+{% block content %}
     <!-- Contenido principal -->
     <main class="pt-24 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
         <!-- Hero Section -->
@@ -217,24 +109,5 @@
         </div>
         {% endif %}
     </main>
+{% endblock %}
 
-    <!-- Scripts -->
-    <script>
-        // Sidebar functionality
-        const openMenuBtn = document.getElementById('open-menu');
-        const closeMenuBtn = document.getElementById('close-menu');
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('visible');
-            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
-        }
-
-        openMenuBtn.addEventListener('click', toggleSidebar);
-        closeMenuBtn.addEventListener('click', toggleSidebar);
-        overlay.addEventListener('click', toggleSidebar);
-    </script>
-</body>
-</html>

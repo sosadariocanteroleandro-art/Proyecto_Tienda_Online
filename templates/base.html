@@ -1,52 +1,131 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    {% load humanize %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mi Tienda{% endblock %}</title>
+    <title>{% block title %}Tu Tienda{% endblock %}</title>
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans antialiased flex flex-col min-h-screen">
 
-    <!-- Menú de navegación -->
-    <nav class="w-full bg-white shadow-md p-4 mb-6">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="{% url 'productos:home' %}" class="text-xl font-bold text-gray-800">Mi Tienda</a>
-            <div class="space-x-4">
-                <a href="{% url 'productos:home' %}" class="text-gray-700 hover:text-gray-900">Inicio</a>
-                <a href="{% url 'productos:afiliarme' %}" class="text-gray-700 hover:text-gray-900">Afiliarse</a>
-                <a href="{% url 'productos:mis_productos' %}" class="text-gray-700 hover:text-gray-900">Mis Productos</a>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar {
+            width: 0;
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .sidebar.open {
+            width: 280px;
+            transform: translateX(0);
+        }
+        .overlay {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .overlay.visible {
+            display: block;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        .quick-action {
+            transition: all 0.3s ease;
+        }
+        .quick-action:hover {
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative">
+    <!-- Overlay -->
+    <div id="overlay" class="overlay fixed inset-0 z-40 hidden"></div>
+
+    <!-- Sidebar -->
+    {% include 'includes/sidebar.html' %}
+
+    <!-- Navbar Moderno -->
+    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12 fixed top-0 w-full z-50">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300 text-xl">☰</button>
+            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
+            <div class="hidden md:flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                    <span class="text-white font-medium">Hola, {{ user.username }}</span>
+                {% else %}
+                    <span class="text-white font-medium">Dashboard</span>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Bloque para mostrar los mensajes de Django -->
+    <!-- Mensajes -->
     {% if messages %}
-        <div class="container mx-auto px-4 mb-4">
-            <ul class="messages list-none p-0 max-w-2xl mx-auto space-y-2">
-                {% for message in messages %}
-                    <li class="{% if message.tags == 'success' %}bg-green-500{% elif message.tags == 'error' %}bg-red-500{% elif message.tags == 'warning' %}bg-yellow-500{% else %}bg-blue-500{% endif %} text-white p-3 rounded-lg text-center font-medium shadow-md">
-                        {{ message }}
-                    </li>
-                {% endfor %}
-            </ul>
+        <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-500{% elif message.tags == 'error' %}bg-red-500{% elif message.tags == 'warning' %}bg-yellow-500{% else %}bg-blue-500{% endif %} text-white p-4 rounded-lg shadow-lg text-center font-medium">
+                    {{ message }}
+                </div>
+            {% endfor %}
         </div>
     {% endif %}
 
-    <!-- Contenido principal -->
-    <div class="container mx-auto p-4 flex-grow">
-        {% block content %}
-        {% endblock %}
-    </div>
+    <!-- Contenido -->
+    <main class="pt-24 pb-16 px-4 md:px-12">
+        <div class="max-w-7xl mx-auto">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
 
-    <!-- Footer (opcional) -->
-    <footer class="w-full bg-white shadow-md p-4 mt-6">
+    <!-- Footer -->
+    <footer class="w-full bg-white shadow-lg mt-8 py-6">
         <div class="container mx-auto text-center text-gray-600">
-            <p>&copy; 2025 Mi Tienda. Todos los derechos reservados.</p>
+            <p>&copy; 2025 Tu Tienda</p>
         </div>
     </footer>
 
+    <!-- JavaScript -->
+    <script>
+        const openMenuBtn = document.getElementById('open-menu');
+        const closeMenuBtn = document.getElementById('close-menu');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        if (openMenuBtn) openMenuBtn.addEventListener('click', toggleSidebar);
+        if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleSidebar);
+        if (overlay) overlay.addEventListener('click', toggleSidebar);
+    </script>
 </body>
 </html>

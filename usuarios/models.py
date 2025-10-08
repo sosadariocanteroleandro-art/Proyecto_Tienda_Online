@@ -7,12 +7,8 @@ from django.utils.translation import gettext_lazy as _
 class CustomUser(AbstractUser):
     """
     Modelo de usuario personalizado.
-    Hereda de AbstractUser para extender el modelo de usuario por defecto de Django.
     """
-    # Campo para el nombre del usuario
     nombre = models.CharField(max_length=100)
-
-    # Campo para el correo electrónico (NUEVO)
     email = models.EmailField(
         _('correo electrónico'),
         unique=True,
@@ -21,27 +17,79 @@ class CustomUser(AbstractUser):
         }
     )
 
-    # Agregamos related_name para evitar conflictos con el modelo de usuario por defecto de Django.
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_user_groups',
         blank=True,
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
         verbose_name='groups',
     )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
         related_name='custom_user_permissions',
         blank=True,
-        help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
 
-    # Campos requeridos para el modelo (NUEVO)
     REQUIRED_FIELDS = ['email', 'nombre']
 
     def __str__(self):
-        # Representación en cadena del objeto, útil para el panel de administración
         return self.username
 
 
+class Pedido(models.Model):
+    """
+    Modelo para pedidos
+    """
+    ESTADOS = [
+        ('PENDIENTE', 'Pendiente'),
+        ('COMPLETADO', 'Completado'),
+        ('CANCELADO', 'Cancelado'),
+    ]
+
+    usuario = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='pedidos_usuario'
+    )
+    afiliado_referido = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='ventas_referidas'
+    )
+    estado = models.CharField(
+        max_length=20,
+        choices=ESTADOS,
+        default='PENDIENTE'
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    comision_total = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    def __str__(self):
+        return f"Pedido {self.id} - {self.usuario.username}"
+
+
+class ItemPedido(models.Model):
+    """
+    Modelo para los items dentro de un pedido
+    """
+    pedido = models.ForeignKey(
+        Pedido,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    # Referencia al modelo Producto de la app productos
+    producto = models.ForeignKey(
+        'productos.Producto',  # ← Referencia al Producto de la app productos
+        on_delete=models.CASCADE
+    )
+    cantidad = models.PositiveIntegerField(default=1)
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre}"
