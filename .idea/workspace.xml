@@ -5,24 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/productos/templates/productos/mis_pedidos.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/includes/sidebar.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/home.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/afiliarme.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/afiliarme.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/carrito.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/carrito.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/crear_perfil_vendedor.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/crear_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/crear_producto.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/detalle_pedido.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_pedido.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/detalle_producto.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/editar_perfil_vendedor.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/mis_productos.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/mis_productos.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tienda/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tienda/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/migrations/0001_initial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/migrations/0002_configuracionpagos_alter_producto_options_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/migrations/0003_remove_productovendedor_vendedor_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/migrations/0004_pedido_comprobante_pago.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/migrations/0005_pedido_metodo_pago.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/migrations/0001_initial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0002_producto_tipo_producto.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0003_delete_producto.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0004_alter_customuser_groups_and_more.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
