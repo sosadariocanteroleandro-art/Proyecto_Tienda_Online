@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Convertirse en Vendedor - Tu Tienda{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            🚀 ¿Quieres ser Vendedor?
+        </h1>
+        <p class="text-lg text-gray-600 mb-6">
+            Convierte tu cuenta de comprador en una cuenta de vendedor/afiliado y empieza a ganar dinero.
+        </p>
+    </div>
+
+    <!-- Información del upgrade -->
+    <div class="glass-card rounded-2xl shadow-xl p-8 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">✨ ¿Qué obtienes como Vendedor?</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">🤝</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-2">Afiliación a Productos</h3>
+                    <p class="text-gray-600 text-sm">Afíliate a cualquier producto y gana comisiones por cada venta que generes.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">🔗</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-2">Links Únicos</h3>
+                    <p class="text-gray-600 text-sm">Obtén links personalizados para cada producto y comparte en redes sociales.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-2">Estadísticas Detalladas</h3>
+                    <p class="text-gray-600 text-sm">Ve tus ventas, comisiones ganadas y el rendimiento de tus links.</p>
+                </div>
+            </div>
+
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span class="text-2xl">💰</span>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-800 mb-2">Comisiones por Venta</h3>
+                    <p class="text-gray-600 text-sm">Gana hasta 15% de comisión por cada producto vendido a través de tus links.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas del usuario actual -->
+        <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-lg mb-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-2">📈 Tu Actividad Actual</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-blue-600 font-semibold">Pedidos realizados:</span> 
+                    <span class="text-blue-800">{{ pedidos_realizados }}</span>
+                </div>
+                <div>
+                    <span class="text-blue-600 font-semibold">Tipo de cuenta:</span> 
+                    <span class="text-blue-800">{{ request.user.get_tipo_usuario_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lo que sigue siendo igual -->
+        <div class="bg-green-50 border border-green-200 p-4 rounded-lg mb-6">
+            <h4 class="font-semibold text-green-800 mb-2">✅ Sigues manteniendo:</h4>
+            <ul class="text-green-700 text-sm space-y-1">
+                <li>• Todas tus funciones de comprador</li>
+                <li>• Historial de pedidos completo</li>
+                <li>• Carrito de compras</li>
+                <li>• Información de cuenta</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Formulario de confirmación -->
+    <div class="glass-card rounded-2xl shadow-xl p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">🎯 ¿Estás Listo?</h2>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Checkbox de confirmación -->
+            <div class="flex items-start space-x-3">
+                <input type="checkbox" id="acepto_terminos" name="acepto_terminos" 
+                       class="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500" required>
+                <label for="acepto_terminos" class="text-sm text-gray-700">
+                    Entiendo que al convertirme en vendedor/afiliado:
+                    <ul class="mt-2 ml-4 space-y-1 text-xs text-gray-600">
+                        <li>• Podré afiliarme a productos y generar links únicos</li>
+                        <li>• Recibiré comisiones por las ventas que genere</li>
+                        <li>• Mantendré todas mis funciones de comprador</li>
+                        <li>• Este cambio es permanente y no se puede revertir</li>
+                    </ul>
+                </label>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex space-x-4">
+                <button type="submit" name="confirmar_upgrade" value="si"
+                        class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-8 rounded-xl text-center transition duration-300 transform hover:scale-105"
+                        onclick="return confirm('¿Estás seguro de que quieres convertirte en vendedor? Este cambio es permanente.')">
+                    🚀 Sí, Quiero ser Vendedor
+                </button>
+                
+                <a href="{% url 'usuarios:home' %}"
+                   class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-8 rounded-xl text-center transition duration-300">
+                    ← Tal vez más tarde
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Testimonios o ejemplos (opcional) -->
+    <div class="glass-card rounded-2xl shadow-xl p-8 mt-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">💬 Ejemplos de Ganancias</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center p-4 bg-blue-50 rounded-xl">
+                <div class="text-2xl font-bold text-blue-600 mb-1">₲150,000</div>
+                <div class="text-sm text-gray-600">Ganancia promedio mensual</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-xl">
+                <div class="text-2xl font-bold text-green-600 mb-1">15%</div>
+                <div class="text-sm text-gray-600">Comisión promedio</div>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-xl">
+                <div class="text-2xl font-bold text-purple-600 mb-1">24/7</div>
+                <div class="text-sm text-gray-600">Soporte disponible</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

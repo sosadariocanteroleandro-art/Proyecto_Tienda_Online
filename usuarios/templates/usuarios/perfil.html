@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Mi Perfil - Tu Tienda{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header del Perfil -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">
+            👤 Mi Perfil
+        </h1>
+        <p class="text-lg text-gray-600">
+            Información de tu cuenta y actividad en la plataforma
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Información Personal -->
+        <div class="lg:col-span-1">
+            <div class="glass-card rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Información Personal</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm font-semibold text-gray-600">Usuario:</label>
+                        <p class="text-gray-800 font-medium">{{ user.username }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm font-semibold text-gray-600">Email:</label>
+                        <p class="text-gray-800 font-medium">{{ user.email }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm font-semibold text-gray-600">Nombre:</label>
+                        <p class="text-gray-800 font-medium">{{ user.nombre|default:user.first_name }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm font-semibold text-gray-600">Tipo de Cuenta:</label>
+                        <div class="flex items-center space-x-2">
+                            {% if user.es_vendedor %}
+                                {% if user.is_superuser %}
+                                <span class="bg-yellow-100 text-yellow-800 text-sm font-bold px-3 py-1 rounded-full">
+                                    👑 Administrador
+                                </span>
+                                {% else %}
+                                <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">
+                                    🤝 Vendedor/Afiliado
+                                </span>
+                                {% endif %}
+                            {% else %}
+                            <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
+                                🛒 Comprador
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-sm font-semibold text-gray-600">Miembro desde:</label>
+                        <p class="text-gray-800 font-medium">{{ user.date_joined|date:"F Y" }}</p>
+                    </div>
+                    
+                    {% if user.es_vendedor and user.fecha_upgrade_vendedor %}
+                    <div>
+                        <label class="text-sm font-semibold text-gray-600">Vendedor desde:</label>
+                        <p class="text-gray-800 font-medium">{{ user.fecha_upgrade_vendedor|date:"F Y" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Botón de upgrade para compradores -->
+                {% if user.es_comprador %}
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <a href="{% url 'usuarios:upgrade_vendedor' %}" 
+                       class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl text-center transition duration-300 transform hover:scale-105 block">
+                        🚀 Convertirse en Vendedor
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Estadísticas y Actividad -->
+        <div class="lg:col-span-2">
+            <!-- Estadísticas Generales -->
+            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Estadísticas de Actividad</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Pedidos Realizados -->
+                    <div class="text-center p-4 bg-blue-50 rounded-xl">
+                        <div class="text-3xl font-bold text-blue-600 mb-1">{{ pedidos_count }}</div>
+                        <div class="text-sm text-gray-600">Pedidos Realizados</div>
+                    </div>
+
+                    {% if user.es_vendedor %}
+                    <!-- Productos Afiliados -->
+                    <div class="text-center p-4 bg-green-50 rounded-xl">
+                        <div class="text-3xl font-bold text-green-600 mb-1">{{ productos_afiliados_count|default:0 }}</div>
+                        <div class="text-sm text-gray-600">Productos Afiliados</div>
+                    </div>
+
+                    <!-- Comisiones Ganadas -->
+                    <div class="text-center p-4 bg-purple-50 rounded-xl">
+                        <div class="text-3xl font-bold text-purple-600 mb-1">₲{{ comisiones_totales|default:0|intcomma }}</div>
+                        <div class="text-sm text-gray-600">Comisiones Ganadas</div>
+                    </div>
+                    {% else %}
+                    <!-- Para compradores: Diferentes métricas -->
+                    <div class="text-center p-4 bg-green-50 rounded-xl">
+                        <div class="text-3xl font-bold text-green-600 mb-1">{{ user.productos_afiliados.count }}</div>
+                        <div class="text-sm text-gray-600">Productos Favoritos</div>
+                    </div>
+
+                    <div class="text-center p-4 bg-purple-50 rounded-xl">
+                        <div class="text-3xl font-bold text-purple-600 mb-1">₲0</div>
+                        <div class="text-sm text-gray-600">Potencial de Ganancias</div>
+                        <div class="text-xs text-purple-500 mt-1">¡Conviértete en vendedor!</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Estadísticas Específicas para Vendedores -->
+            {% if user.es_vendedor %}
+            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">💼 Panel de Vendedor</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
+                        <h3 class="font-semibold text-blue-800 mb-2">Ventas Referidas</h3>
+                        <p class="text-2xl font-bold text-blue-600">{{ ventas_referidas_count|default:0 }}</p>
+                        <p class="text-xs text-blue-600 mt-1">Ventas generadas por tus links</p>
+                    </div>
+
+                    <div class="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl">
+                        <h3 class="font-semibold text-green-800 mb-2">Comisión Pendiente</h3>
+                        <p class="text-2xl font-bold text-green-600">₲{{ comisiones_totales|default:0|intcomma }}</p>
+                        <p class="text-xs text-green-600 mt-1">Por cobrar</p>
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas para Vendedores -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <a href="{% url 'productos:afiliarme' %}" 
+                       class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                        🤝 Afiliarme a Productos
+                    </a>
+                    <a href="{% url 'productos:mis_links_afiliado' %}" 
+                       class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                        🔗 Ver Mis Links
+                    </a>
+                </div>
+            </div>
+
+            <!-- Para Superusuarios -->
+            {% if user.is_superuser %}
+            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">👑 Panel de Administrador</h2>
+                
+                <div class="space-y-3">
+                    <a href="{% url 'productos:crear_producto' %}" 
+                       class="block bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                        ➕ Crear Nuevo Producto
+                    </a>
+                    <a href="/admin/" 
+                       class="block bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                        ⚙️ Panel de Administración Django
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Panel para Compradores -->
+            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">🛒 Panel de Comprador</h2>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
+                    <h3 class="font-semibold text-blue-800 mb-2">💡 ¿Sabías que puedes ganar dinero?</h3>
+                    <p class="text-blue-700 text-sm mb-3">
+                        Como vendedor/afiliado puedes ganar comisiones promocionando productos que te gustan.
+                    </p>
+                    <a href="{% url 'usuarios:upgrade_vendedor' %}" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition duration-300">
+                        🚀 Saber más
+                    </a>
+                </div>
+
+                <!-- Acciones para compradores -->
+                <div class="space-y-3">
+                    <a href="{% url 'productos:home' %}" 
+                       class="block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                        🛍️ Explorar Productos
+                    </a>
+                    <a href="{% url 'productos:ver_carrito' %}" 
+                       class="block bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                        🛒 Ver Mi Carrito
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Accesos Rápidos para Todos -->
+            <div class="glass-card rounded-2xl shadow-xl p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ Accesos Rápidos</h2>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <a href="{% url 'productos:mis_pedidos' %}" 
+                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
+                        <div class="text-2xl mb-1">📦</div>
+                        <div class="text-xs font-medium text-gray-700">Mis Pedidos</div>
+                    </a>
+                    
+                    <a href="{% url 'productos:ver_carrito' %}" 
+                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
+                        <div class="text-2xl mb-1">🛒</div>
+                        <div class="text-xs font-medium text-gray-700">Carrito</div>
+                    </a>
+                    
+                    <a href="{% url 'productos:home' %}" 
+                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
+                        <div class="text-2xl mb-1">🛍️</div>
+                        <div class="text-xs font-medium text-gray-700">Productos</div>
+                    </a>
+                    
+                    {% if user.es_vendedor %}
+                    <a href="{% url 'productos:mis_productos' %}" 
+                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
+                        <div class="text-2xl mb-1">🤝</div>
+                        <div class="text-xs font-medium text-gray-700">Mis Productos</div>
+                    </a>
+                    
+                    <a href="{% url 'productos:estadisticas_vendedor' %}" 
+                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
+                        <div class="text-2xl mb-1">📊</div>
+                        <div class="text-xs font-medium text-gray-700">Estadísticas</div>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

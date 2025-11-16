@@ -1,113 +1,425 @@
-
-
 {% extends 'base.html' %}
+{% load humanize %}
 
-{% block title %}Iniciar Sesión - Tu Tienda{% endblock %}
+{% block title %}Catálogo de Productos - Tu Tienda{% endblock %}
 
 {% block content %}
-    <!-- Contenido principal -->
-    <main class="pt-24 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
-        <!-- Hero Section -->
-        <div class="hero-section rounded-3xl p-12 text-center shadow-lg mb-12">
-            <h1 class="text-4xl md:text-6xl font-bold text-gray-800 mb-4">
-                Bienvenido {% if request.user.is_authenticated %}<span class="text-blue-600">{{ request.user.username }}</span>{% else %}a Tu Tienda{% endif %}
-            </h1>
-            <p class="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                La plataforma perfecta para vender tus productos y generar ingresos como afiliado
-            </p>
-
-            {% if not request.user.is_authenticated %}
-            <div class="flex gap-4 justify-center">
-                <a href="{% url 'usuarios:login' %}" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
-                    Iniciar Sesión
-                </a>
-                <a href="{% url 'usuarios:registro' %}" class="bg-white text-blue-600 font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 border-2 border-blue-600">
-                    Registrarse
-                </a>
+<div class="max-w-7xl mx-auto">
+    <!-- Header del Catálogo -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+            🛍️ Catálogo de Productos
+        </h1>
+        <p class="text-lg text-gray-600 mb-6">
+            Descubre productos increíbles y encuentra exactamente lo que necesitas
+        </p>
+        
+        <!-- Estadísticas del catálogo -->
+        <div class="flex justify-center space-x-8 mb-8">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600">{{ productos_fisicos|length }}</div>
+                <div class="text-sm text-gray-500">Productos Físicos</div>
             </div>
-            {% endif %}
+            <div class="text-center">
+                <div class="text-2xl font-bold text-green-600">{{ productos_digitales|length }}</div>
+                <div class="text-sm text-gray-500">Productos Digitales</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-purple-600">{{ productos_fisicos|length|add:productos_digitales|length }}</div>
+                <div class="text-sm text-gray-500">Total Disponibles</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="glass-card rounded-2xl p-6 mb-8 shadow-lg">
+        <div class="flex flex-wrap gap-4 items-center justify-between">
+            <!-- Filtros de tipo -->
+            <div class="flex gap-2">
+                <button onclick="showAll()" id="btn-todos" class="filter-btn bg-blue-500 text-white px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-blue-600">
+                    Todos ({{ productos_fisicos|length|add:productos_digitales|length }})
+                </button>
+                <button onclick="showFisicos()" id="btn-fisicos" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
+                    📦 Físicos ({{ productos_fisicos|length }})
+                </button>
+                <button onclick="showDigitales()" id="btn-digitales" class="filter-btn bg-gray-200 text-gray-700 px-4 py-2 rounded-full font-medium transition duration-300 hover:bg-gray-300">
+                    💻 Digitales ({{ productos_digitales|length }})
+                </button>
+            </div>
+            
+            <!-- Barra de búsqueda -->
+            <div class="flex items-center space-x-4">
+                <input type="text" id="searchInput" placeholder="Buscar productos..." 
+                       class="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select id="sortSelect" onchange="sortProducts()" class="px-3 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="recientes">Más Recientes</option>
+                    <option value="precio-menor">Menor Precio</option>
+                    <option value="precio-mayor">Mayor Precio</option>
+                    <option value="nombre">Nombre A-Z</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensajes para usuarios -->
+    {% if request.user.is_authenticated %}
+        {% if request.user.es_comprador %}
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg mb-8">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <span class="text-2xl">💡</span>
+                </div>
+                <div class="ml-3">
+                    <p class="text-yellow-700">
+                        <strong>¡Puedes ganar dinero con estos productos!</strong> 
+                        <a href="{% url 'usuarios:upgrade_vendedor' %}" class="underline font-semibold hover:text-yellow-900">
+                            Conviértete en vendedor
+                        </a> 
+                        y gana comisiones por cada venta.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% elif request.user.es_vendedor %}
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg mb-8">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <span class="text-2xl">🤝</span>
+                </div>
+                <div class="ml-3">
+                    <p class="text-green-700">
+                        <strong>¡Encuentra productos para afiliar!</strong> 
+                        Haz clic en "Afiliarme" en cualquier producto para generar tu link único.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-8">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <span class="text-2xl">🔐</span>
+            </div>
+            <div class="ml-3">
+                <p class="text-blue-700">
+                    <strong>¡Crea tu cuenta gratis!</strong> 
+                    <a href="{% url 'usuarios:registro' %}" class="underline font-semibold hover:text-blue-900">
+                        Regístrate
+                    </a> 
+                    para comprar productos y acceder a oportunidades de afiliación.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Productos Físicos -->
+    <div id="seccion-fisicos" class="mb-16">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center">
+                <h2 class="text-3xl font-bold text-gray-800 mr-4">📦 Productos Físicos</h2>
+                <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
+                    {{ productos_fisicos|length }} disponible{{ productos_fisicos|length|pluralize }}
+                </span>
+            </div>
         </div>
 
-        <!-- Mensajes -->
-        {% if messages %}
-        <div class="mb-8">
-            {% for message in messages %}
-            <div class="glass-card rounded-2xl p-4 mb-3 shadow-lg {% if message.tags == 'error' %}border-l-4 border-red-500{% elif message.tags == 'success' %}border-l-4 border-green-500{% else %}border-l-4 border-blue-500{% endif %}">
-                <p class="{% if message.tags == 'error' %}text-red-700{% elif message.tags == 'success' %}text-green-700{% else %}text-blue-700{% endif %} font-medium">
-                    {{ message }}
-                </p>
+        {% if productos_fisicos %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productos-fisicos-grid">
+            {% for producto in productos_fisicos %}
+            <div class="product-card glass-card rounded-2xl shadow-lg overflow-hidden group" 
+                 data-type="FISICO" 
+                 data-name="{{ producto.nombre|lower }}" 
+                 data-precio="{{ producto.precio }}"
+                 data-fecha="{{ producto.fecha_creacion|date:'Y-m-d' }}">
+                
+                <div class="relative">
+                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                         onerror="this.src='https://placehold.co/600x400/3b82f6/fff?text={{ producto.nombre|slice:':3' }}'">
+                    
+                    <!-- Badges -->
+                    <div class="absolute top-3 right-3">
+                        <span class="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">📦 Físico</span>
+                    </div>
+                    
+                    <!-- Stock indicator -->
+                    {% if producto.stock <= 5 %}
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">⚠️ Pocas unidades</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="p-5">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-600 transition duration-300">
+                        {{ producto.nombre }}
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion|truncatechars:80 }}</p>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
+                            <div class="text-xs text-gray-500">Stock: {{ producto.stock }}</div>
+                        </div>
+                        {% if request.user.is_authenticated and request.user.es_vendedor %}
+                            {% if request.user in producto.afiliados.all %}
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">✅ Afiliado</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="space-y-2">
+                        <a href="{% url 'productos:detalle_producto' producto.id %}" 
+                           class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                            Ver Detalles
+                        </a>
+                        
+                        {% if request.user.is_authenticated and request.user.es_vendedor %}
+                            {% if request.user not in producto.afiliados.all %}
+                            <form method="post" action="{% url 'productos:afiliar_producto' producto.id %}">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                        class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                    🤝 Afiliarme
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl">
+            <div class="text-4xl mb-4">📦</div>
+            <p class="text-gray-600 text-lg">No hay productos físicos disponibles</p>
+        </div>
         {% endif %}
+    </div>
 
-        <!-- Características principales -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div class="glass-card feature-card rounded-2xl p-8 shadow-lg text-center">
-                <div class="text-5xl mb-4">🛒</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">Explora Productos</h3>
-                <p class="text-gray-600 mb-4">Descubre una amplia variedad de productos físicos y digitales</p>
-                <a href="{% url 'productos:home' %}" class="text-blue-600 font-semibold hover:text-blue-700 transition duration-300">
-                    Ver productos →
-                </a>
-            </div>
-
-            <div class="glass-card feature-card rounded-2xl p-8 shadow-lg text-center">
-                <div class="text-5xl mb-4">🤝</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">Afíliate y Gana</h3>
-                <p class="text-gray-600 mb-4">Promociona productos y genera comisiones por cada venta</p>
-                <a href="{% url 'productos:afiliarme' %}" class="text-blue-600 font-semibold hover:text-blue-700 transition duration-300">
-                    Afiliarme ahora →
-                </a>
-            </div>
-
-            <div class="glass-card feature-card rounded-2xl p-8 shadow-lg text-center">
-                <div class="text-5xl mb-4">💼</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">Vende Tus Productos</h3>
-                <p class="text-gray-600 mb-4">Conviértete en vendedor y alcanza miles de clientes</p>
-                {% if request.user.is_authenticated %}
-                <a href="{% url 'productos:crear_producto' %}" class="text-blue-600 font-semibold hover:text-blue-700 transition duration-300">
-                    Crear producto →
-                </a>
-                {% else %}
-                <a href="{% url 'usuarios:login' %}" class="text-blue-600 font-semibold hover:text-blue-700 transition duration-300">
-                    Iniciar sesión →
-                </a>
-                {% endif %}
+    <!-- Productos Digitales -->
+    <div id="seccion-digitales">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center">
+                <h2 class="text-3xl font-bold text-gray-800 mr-4">💻 Productos Digitales</h2>
+                <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">
+                    {{ productos_digitales|length }} disponible{{ productos_digitales|length|pluralize }}
+                </span>
             </div>
         </div>
 
-        <!-- Estadísticas (solo si está autenticado) -->
-        {% if request.user.is_authenticated %}
-        <div class="glass-card rounded-2xl p-8 shadow-lg">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📊 Tu Panel de Control</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="text-center p-6 bg-blue-50 rounded-xl">
-                    <div class="text-4xl font-bold text-blue-600 mb-2">
-                        {{ request.user.productos_afiliados.count }}
+        {% if productos_digitales %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productos-digitales-grid">
+            {% for producto in productos_digitales %}
+            <div class="product-card glass-card rounded-2xl shadow-lg overflow-hidden group" 
+                 data-type="DIGITAL" 
+                 data-name="{{ producto.nombre|lower }}" 
+                 data-precio="{{ producto.precio }}"
+                 data-fecha="{{ producto.fecha_creacion|date:'Y-m-d' }}">
+                
+                <div class="relative">
+                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover"
+                         onerror="this.src='https://placehold.co/600x400/10b981/fff?text={{ producto.nombre|slice:':3' }}'">
+                    
+                    <!-- Badges -->
+                    <div class="absolute top-3 right-3">
+                        <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">💻 Digital</span>
                     </div>
-                    <div class="text-gray-600 font-medium">Productos Afiliados</div>
+                    
+                    <div class="absolute top-3 left-3">
+                        <span class="bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full">⚡ Instantáneo</span>
+                    </div>
                 </div>
-                <div class="text-center p-6 bg-green-50 rounded-xl">
-                    <div class="text-4xl font-bold text-green-600 mb-2">
-                        {{ request.user.productos_creados.count }}
+
+                <div class="p-5">
+                    <h3 class="font-bold text-lg text-gray-800 mb-2 group-hover:text-green-600 transition duration-300">
+                        {{ producto.nombre }}
+                    </h3>
+                    <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ producto.descripcion|truncatechars:80 }}</p>
+
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-2xl font-bold text-green-600">₲{{ producto.precio|intcomma }}</span>
+                            <div class="text-xs text-gray-500">Entrega inmediata</div>
+                        </div>
+                        {% if request.user.is_authenticated and request.user.es_vendedor %}
+                            {% if request.user in producto.afiliados.all %}
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">✅ Afiliado</span>
+                            {% endif %}
+                        {% endif %}
                     </div>
-                    <div class="text-gray-600 font-medium">Productos Creados</div>
-                </div>
-                <div class="text-center p-6 bg-purple-50 rounded-xl">
-                    <div class="text-4xl font-bold text-purple-600 mb-2">
-                        ₲0
+
+                    <!-- Botones de acción -->
+                    <div class="space-y-2">
+                        <a href="{% url 'productos:detalle_producto' producto.id %}" 
+                           class="block w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
+                            Ver Detalles
+                        </a>
+                        
+                        {% if request.user.is_authenticated and request.user.es_vendedor %}
+                            {% if request.user not in producto.afiliados.all %}
+                            <form method="post" action="{% url 'productos:afiliar_producto' producto.id %}">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                        class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                    💎 Afiliarme
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% endif %}
                     </div>
-                    <div class="text-gray-600 font-medium">Comisiones Ganadas</div>
                 </div>
             </div>
-            <div class="text-center mt-6">
-                <a href="{% url 'productos:mis_productos' %}" class="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
-                    Ver mis productos
-                </a>
-            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl">
+            <div class="text-4xl mb-4">💻</div>
+            <p class="text-gray-600 text-lg">No hay productos digitales disponibles</p>
         </div>
         {% endif %}
-    </main>
+    </div>
+
+    <!-- CTA para usuarios no registrados -->
+    {% if not request.user.is_authenticated %}
+    <div class="glass-card rounded-3xl p-8 mt-16 text-center shadow-2xl">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4">🎯 ¿Te interesa algún producto?</h3>
+        <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
+            Crea tu cuenta gratuita para comprar productos y acceder a nuestro programa de afiliados.
+        </p>
+        <div class="flex flex-wrap gap-4 justify-center">
+            <a href="{% url 'usuarios:registro' %}" class="bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                Crear Cuenta Gratis
+            </a>
+            <a href="{% url 'usuarios:login' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300">
+                Iniciar Sesión
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .product-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales para filtros
+let currentFilter = 'all';
+let currentSort = 'recientes';
+
+// Función para actualizar botones de filtro
+function updateFilterButtons(activeBtn, filterId) {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+    });
+    activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+    activeBtn.classList.add('bg-blue-500', 'text-white');
+    currentFilter = filterId;
+    applyFilters();
+}
+
+// Funciones de filtro
+function showAll() {
+    updateFilterButtons(document.getElementById('btn-todos'), 'all');
+    document.getElementById('seccion-fisicos').style.display = 'block';
+    document.getElementById('seccion-digitales').style.display = 'block';
+}
+
+function showFisicos() {
+    updateFilterButtons(document.getElementById('btn-fisicos'), 'fisicos');
+    document.getElementById('seccion-fisicos').style.display = 'block';
+    document.getElementById('seccion-digitales').style.display = 'none';
+}
+
+function showDigitales() {
+    updateFilterButtons(document.getElementById('btn-digitales'), 'digitales');
+    document.getElementById('seccion-fisicos').style.display = 'none';
+    document.getElementById('seccion-digitales').style.display = 'block';
+}
+
+// Función de búsqueda
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const products = document.querySelectorAll('.product-card');
+
+    products.forEach(product => {
+        const productName = product.dataset.name;
+        const productType = product.dataset.type;
+        
+        let showProduct = true;
+
+        // Filtro por búsqueda
+        if (searchTerm && !productName.includes(searchTerm)) {
+            showProduct = false;
+        }
+
+        // Filtro por tipo (ya manejado por showAll, showFisicos, showDigitales)
+        if (currentFilter === 'fisicos' && productType !== 'FISICO') {
+            showProduct = false;
+        } else if (currentFilter === 'digitales' && productType !== 'DIGITAL') {
+            showProduct = false;
+        }
+
+        product.style.display = showProduct ? 'block' : 'none';
+    });
+}
+
+// Función de ordenamiento
+function sortProducts() {
+    currentSort = document.getElementById('sortSelect').value;
+    const fisicosGrid = document.getElementById('productos-fisicos-grid');
+    const digitalesGrid = document.getElementById('productos-digitales-grid');
+    
+    [fisicosGrid, digitalesGrid].forEach(grid => {
+        if (!grid) return;
+        
+        const products = Array.from(grid.children);
+        
+        products.sort((a, b) => {
+            switch (currentSort) {
+                case 'precio-menor':
+                    return parseFloat(a.dataset.precio) - parseFloat(b.dataset.precio);
+                case 'precio-mayor':
+                    return parseFloat(b.dataset.precio) - parseFloat(a.dataset.precio);
+                case 'nombre':
+                    return a.dataset.name.localeCompare(b.dataset.name);
+                case 'recientes':
+                default:
+                    return new Date(b.dataset.fecha) - new Date(a.dataset.fecha);
+            }
+        });
+        
+        products.forEach(product => grid.appendChild(product));
+    });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Búsqueda en tiempo real
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+});
+</script>
+{% endblock %}

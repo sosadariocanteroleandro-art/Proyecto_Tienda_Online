@@ -157,7 +157,8 @@ class Pedido(models.Model):
         verbose_name='Afiliado que refirió'
     )
 
-    comision_total = models.DecimalField(
+    # ✅ CAMBIO CRÍTICO: comision_total como campo normal (no property)
+    comision_total_field = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=0,
@@ -184,9 +185,11 @@ class Pedido(models.Model):
     # Notas
     notas = models.TextField(blank=True, verbose_name='Notas del cliente')
 
-    # Agregar estas funciones al archivo models.py en la clase Pedido
-
-    # En productos/models.py - Agregar estos métodos a la clase Pedido:
+    # ✅ PROPERTY para mantener compatibilidad con el código existente
+    @property
+    def comision_total(self):
+        """Calcula y devuelve la comisión total del pedido"""
+        return self.comision_total_field
 
     @property
     def productos_lista(self):
@@ -200,22 +203,6 @@ class Pedido(models.Model):
             productos.append(f"{item.producto.nombre} (x{item.cantidad})")
 
         return " | ".join(productos)
-
-    @property
-    def comision_total(self):
-        """Calcula la comisión total del pedido si hay afiliado"""
-        if not self.afiliado_referido:
-            return 0
-
-        # Usar comisión por defecto del 15% si no hay configuración específica
-        from .models import ConfiguracionPagos
-        try:
-            config = ConfiguracionPagos.objects.first()
-            porcentaje = config.comision_afiliado_default if config else 15.0
-        except:
-            porcentaje = 15.0
-
-        return (self.total * porcentaje) / 100
 
     def puede_cambiar_estado(self, nuevo_estado):
         """Verifica si el pedido puede cambiar al nuevo estado"""
@@ -231,16 +218,13 @@ class Pedido(models.Model):
         return nuevo_estado in estados_validos.get(self.estado, [])
 
     def __str__(self):
-        return f"Pedido #{self.numero_pedido} - {self.nombre_completo} (₲{self.total:,})"
+        if self.numero_pedido:
+            return f"Pedido #{self.numero_pedido} - {self.usuario.username}"
+        return f"Carrito de {self.usuario.username}"
 
     class Meta:
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
-        ordering = ['-fecha_creacion']
-
-    class Meta:
-        verbose_name = 'Pedido'
-        verbose_name_plural = 'Pedidos'
         ordering = ['-fecha_creacion']
 
     def save(self, *args, **kwargs):
@@ -281,18 +265,14 @@ class Pedido(models.Model):
         else:
             comision = Decimal('0')
 
-        if self.total != total or self.comision_total != comision:
+        if self.total != total or self.comision_total_field != comision:
             self.total = total
-            self.comision_total = comision
+            # ✅ CAMBIO CRÍTICO: Usar el campo normal, no la property
+            self.comision_total_field = comision
             Pedido.objects.filter(pk=self.pk).update(
                 total=total,
-                comision_total=comision
+                comision_total_field=comision  # ✅ Usar el campo correcto
             )
-
-    def __str__(self):
-        if self.numero_pedido:
-            return f"Pedido #{self.numero_pedido} - {self.usuario.username}"
-        return f"Carrito de {self.usuario.username}"
 
 
 class ItemPedido(models.Model):
