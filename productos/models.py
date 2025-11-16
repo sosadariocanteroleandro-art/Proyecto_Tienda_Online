@@ -184,18 +184,73 @@ class Pedido(models.Model):
     # Notas
     notas = models.TextField(blank=True, verbose_name='Notas del cliente')
 
+    # Agregar estas funciones al archivo models.py en la clase Pedido
+
+    # En productos/models.py - Agregar estos métodos a la clase Pedido:
+
+    @property
+    def productos_lista(self):
+        """Devuelve una lista legible de los productos del pedido"""
+        items = self.items.all()
+        if not items:
+            return "Sin productos"
+
+        productos = []
+        for item in items:
+            productos.append(f"{item.producto.nombre} (x{item.cantidad})")
+
+        return " | ".join(productos)
+
+    @property
+    def comision_total(self):
+        """Calcula la comisión total del pedido si hay afiliado"""
+        if not self.afiliado_referido:
+            return 0
+
+        # Usar comisión por defecto del 15% si no hay configuración específica
+        from .models import ConfiguracionPagos
+        try:
+            config = ConfiguracionPagos.objects.first()
+            porcentaje = config.comision_afiliado_default if config else 15.0
+        except:
+            porcentaje = 15.0
+
+        return (self.total * porcentaje) / 100
+
+    def puede_cambiar_estado(self, nuevo_estado):
+        """Verifica si el pedido puede cambiar al nuevo estado"""
+        estados_validos = {
+            'PENDIENTE': ['CONFIRMADO', 'CANCELADO'],
+            'CONFIRMADO': ['PROCESANDO', 'CANCELADO'],
+            'PROCESANDO': ['ENVIADO', 'CANCELADO'],
+            'ENVIADO': ['ENTREGADO'],
+            'ENTREGADO': [],  # Estado final
+            'CANCELADO': []  # Estado final
+        }
+
+        return nuevo_estado in estados_validos.get(self.estado, [])
+
+    def __str__(self):
+        return f"Pedido #{self.numero_pedido} - {self.nombre_completo} (₲{self.total:,})"
+
+    class Meta:
+        verbose_name = "Pedido"
+        verbose_name_plural = "Pedidos"
+        ordering = ['-fecha_creacion']
+
     class Meta:
         verbose_name = 'Pedido'
         verbose_name_plural = 'Pedidos'
         ordering = ['-fecha_creacion']
 
     def save(self, *args, **kwargs):
-        # Generar número de pedido solo cuando se confirma
+        # Generar número de pedido solo cuando se confirma (no para carrito)
         if not self.numero_pedido and self.estado != 'PENDIENTE':
             fecha = timezone.now()
             prefijo = fecha.strftime('%Y%m%d')
             ultimo_pedido = Pedido.objects.filter(
-                numero_pedido__startswith=prefijo
+                numero_pedido__startswith=prefijo,
+                numero_pedido__isnull=False  # Agregado: excluir nulos
             ).exclude(numero_pedido='').order_by('-numero_pedido').first()
 
             if ultimo_pedido:
@@ -210,7 +265,10 @@ class Pedido(models.Model):
             self.numero_pedido = f"{prefijo}{nuevo_numero:03d}"
 
         super().save(*args, **kwargs)
-        self.actualizar_total()
+
+        # CAMBIO CRÍTICO: Solo actualizar total si ya existe en BD
+        if self.pk:
+            self.actualizar_total()
 
     def actualizar_total(self):
         """Recalcula el total del pedido y la comisión"""

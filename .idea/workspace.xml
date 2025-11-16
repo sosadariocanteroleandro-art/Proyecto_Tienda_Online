@@ -8,15 +8,12 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tienda/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tienda/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/migrations/0002_configuracionpagos_alter_producto_options_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/migrations/0003_remove_productovendedor_vendedor_and_more.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/migrations/0004_pedido_comprobante_pago.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/migrations/0005_pedido_metodo_pago.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0002_producto_tipo_producto.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0003_delete_producto.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/usuarios/migrations/0004_alter_customuser_groups_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/confirmar_pedido.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/includes/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/includes/sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/templates/usuarios/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/home.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -135,33 +132,28 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/admin.py</url>
-          <line>85</line>
+          <line>108</line>
           <option name="timeStamp" value="23" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/admin.py</url>
-          <line>129</line>
+          <line>228</line>
           <option name="timeStamp" value="24" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/admin.py</url>
-          <line>132</line>
+          <line>231</line>
           <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/productos/views.py</url>
-          <line>333</line>
-          <option name="timeStamp" value="31" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/productos/views.py</url>
-          <line>251</line>
-          <option name="timeStamp" value="32" />
+          <url>file://$PROJECT_DIR$/productos/models.py</url>
+          <line>59</line>
+          <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/models.py</url>
-          <line>7</line>
-          <option name="timeStamp" value="35" />
+          <line>84</line>
+          <option name="timeStamp" value="58" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -20,7 +20,7 @@
     </div>
     {% endif %}
 
-    <form enctype="multipart/form-data" id="checkout-form" method="post">
+    <form enctype="multipart/form-data" method="post" id="pedido-form">
         {% csrf_token %}
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -28,175 +28,152 @@
             <div class="lg:col-span-2 space-y-6">
 
                 <!-- PASO 1: SELECCIONAR MÉTODO DE PAGO -->
-                <div class="glass-card rounded-2xl shadow-xl p-6">
+                <div class="bg-white rounded-2xl shadow-xl p-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">💳 Selecciona tu Método de Pago</h2>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- Pago contra entrega -->
-                        <label class="payment-option border-2 border-gray-300 rounded-xl p-4 text-center">
-                            <input class="hidden" name="metodo_pago" required type="radio" value="CONTRA_ENTREGA">
-                            <div class="text-4xl mb-2">💵</div>
-                            <div class="font-bold text-gray-800">Pago en Puerta</div>
-                            <div class="text-xs text-gray-600 mt-1">Paga al recibir</div>
+                        <label class="metodo-pago block p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-green-500 transition-all duration-300">
+                            <input type="radio" name="metodo_pago" value="CONTRA_ENTREGA" class="sr-only" onchange="cambiarMetodo('CONTRA_ENTREGA')">
+                            <div class="text-center">
+                                <div class="text-4xl mb-2">💵</div>
+                                <div class="font-bold text-gray-800">Pago en Puerta</div>
+                                <div class="text-xs text-gray-600 mt-1">Paga cuando recibas el producto</div>
+                            </div>
                         </label>
 
                         <!-- Transferencia -->
-                        <label class="payment-option border-2 border-gray-300 rounded-xl p-4 text-center">
-                            <input class="hidden" name="metodo_pago" required type="radio" value="TRANSFERENCIA">
-                            <div class="text-4xl mb-2">🏦</div>
-                            <div class="font-bold text-gray-800">Transferencia</div>
-                            <div class="text-xs text-gray-600 mt-1">Sube comprobante</div>
+                        <label class="metodo-pago block p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 transition-all duration-300">
+                            <input type="radio" name="metodo_pago" value="TRANSFERENCIA" class="sr-only" onchange="cambiarMetodo('TRANSFERENCIA')">
+                            <div class="text-center">
+                                <div class="text-4xl mb-2">🏦</div>
+                                <div class="font-bold text-gray-800">Transferencia Bancaria</div>
+                                <div class="text-xs text-gray-600 mt-1">Transfiere y sube comprobante</div>
+                            </div>
                         </label>
+                    </div>
 
-                        <!-- Tarjeta (deshabilitado) -->
-                        <label class="payment-option disabled border-2 border-gray-300 rounded-xl p-4 text-center">
-                            <input class="hidden" disabled name="metodo_pago" type="radio" value="TARJETA">
-                            <div class="text-4xl mb-2">💳</div>
-                            <div class="font-bold text-gray-800">Tarjeta</div>
-                            <div class="text-xs text-gray-600 mt-1">Próximamente</div>
-                        </label>
+                    <!-- Estado del método seleccionado -->
+                    <div id="metodo-estado" class="mt-4 p-3 rounded-lg hidden">
+                        <p id="metodo-mensaje" class="text-sm font-medium"></p>
                     </div>
                 </div>
 
-                <!-- PASO 2: DATOS DEL CLIENTE -->
-                <div class="glass-card rounded-2xl shadow-xl p-6">
+                <!-- PASO 2: DATOS PERSONALES -->
+                <div class="bg-white rounded-2xl shadow-xl p-6">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Tus Datos</h2>
 
                     <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                Nombre Completo <span class="text-red-500">*</span>
-                            </label>
-                            <input class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500" name="nombre_completo" placeholder="Juan Pérez"
-                                   required
-                                   type="text"
-                                   value="{{ request.user.get_full_name }}">
-                        </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Email <span class="text-red-500">*</span>
+                                    Nombre Completo <span class="text-red-500">*</span>
                                 </label>
-                                <input class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500" name="email" placeholder="juan@email.com"
-                                       required
-                                       type="email"
-                                       value="{{ request.user.email }}">
+                                <input type="text" name="nombre_completo" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Tu nombre completo"
+                                       value="{{ request.user.get_full_name|default:request.user.username }}">
                             </div>
-
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     Teléfono <span class="text-red-500">*</span>
                                 </label>
-                                <input class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500" name="telefono" placeholder="+595 981 234567"
-                                       required
-                                       type="tel">
+                                <input type="tel" name="telefono" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="+595 981 234567">
                             </div>
                         </div>
-
-                        <!-- Dirección (se muestra solo si NO es solo digitales O si elige contra entrega) -->
-                        <div %} %}style="display: none;" endif id="direccion-section" if solo_digitales {% {%>
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                        Ciudad <span class="text-red-500" id="ciudad-required">*</span>
-                                    </label>
-                                    <input %} %}required{% endif
-                                           id="ciudad-input" if name="ciudad" not solo_digitales type="text" {%
-                                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
-                                           placeholder="Asunción">
-                                </div>
-
-                            <div class="mt-4">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                        Dirección de Entrega <span class="text-red-500" id="direccion-required">*</span>
-                                    </label>
-                                <textarea %} %}required{%
-                                          endif id="direccion-input" if name="direccion_envio" not rows="3" solo_digitales
-                                          {%
-                                              class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500"
-                                              placeholder="Calle, número, barrio, referencias..."></textarea>
-                                </div>
-                        </div>
-
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                Notas adicionales (opcional)
+                                Email <span class="text-red-500">*</span>
                             </label>
-                            <textarea class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-200 focus:border-blue-500" name="notas"
-                                      placeholder="Alguna indicación especial..."
-                                      rows="2"></textarea>
+                            <input type="email" name="email" required
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="tu@email.com"
+                                   value="{{ request.user.email }}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Notas (opcional)</label>
+                            <textarea name="notas" rows="2"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="Alguna indicación especial..."></textarea>
                         </div>
                     </div>
                 </div>
 
-                <!-- PASO 3: INFORMACIÓN DE TRANSFERENCIA (solo si elige transferencia) -->
-                <div class="glass-card rounded-2xl shadow-xl p-6" id="transferencia-section" style="display: none;">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🏦 Datos para Transferencia</h2>
-
-                    {% if config_pagos %}
-                    <div class="bg-blue-50 p-6 rounded-lg mb-6">
-                        <div class="space-y-3 text-gray-700">
-                            <div class="flex justify-between border-b pb-2">
-                                <span class="font-semibold">Banco:</span>
-                                <span class="text-right">{{ config_pagos.banco_nombre }}</span>
-                            </div>
-                            <div class="flex justify-between border-b pb-2">
-                                <span class="font-semibold">Cuenta:</span>
-                                <span class="text-right font-mono">{{ config_pagos.banco_cuenta }}</span>
-                            </div>
-                            <div class="flex justify-between border-b pb-2">
-                                <span class="font-semibold">Titular:</span>
-                                <span class="text-right">{{ config_pagos.banco_titular }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="font-semibold">CI/RUC:</span>
-                                <span class="text-right">{{ config_pagos.banco_cedula }}</span>
-                            </div>
+                <!-- PASO 3: DIRECCIÓN (se muestra cuando es necesaria) -->
+                <div id="seccion-direccion" class="bg-white rounded-2xl shadow-xl p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">📍 Dirección de Entrega</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Ciudad <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="ciudad" id="ciudad"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="Asunción, Ciudad del Este, etc.">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Dirección <span class="text-red-500">*</span>
+                            </label>
+                            <textarea name="direccion_envio" id="direccion" rows="3"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="Calle, número, barrio, referencias..."></textarea>
                         </div>
                     </div>
-                    {% else %}
-                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
-                        <p class="text-yellow-800">
-                            <strong>Nota:</strong> Los datos bancarios serán proporcionados por el vendedor.
-                        </p>
+                </div>
+
+                <!-- PASO 4: TRANSFERENCIA (se muestra solo para transferencia) -->
+                <div id="seccion-transferencia" class="bg-white rounded-2xl shadow-xl p-6" style="display: none;">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">🏦 Transferencia Bancaria</h2>
+
+                    <!-- Datos bancarios -->
+                    {% if config_pagos and config_pagos.banco_nombre %}
+                    <div class="bg-blue-50 p-6 rounded-lg mb-6">
+                        <h3 class="text-lg font-bold text-blue-900 mb-4">💰 Transfiere exactamente ₲{{ carrito.total|intcomma }} a:</h3>
+                        <div class="space-y-2">
+                            <p><strong>Banco:</strong> {{ config_pagos.banco_nombre }}</p>
+                            <p><strong>Cuenta:</strong> {{ config_pagos.banco_cuenta }}</p>
+                            <p><strong>Titular:</strong> {{ config_pagos.banco_titular }}</p>
+                            {% if config_pagos.banco_cedula %}
+                            <p><strong>CI/RUC:</strong> {{ config_pagos.banco_cedula }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endif %}
 
+                    <!-- Subir comprobante -->
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Subir Comprobante de Pago <span class="text-red-500">*</span>
+                            Comprobante de Pago <span class="text-red-500">*</span>
                         </label>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition duration-200">
-                            <input accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 file:cursor-pointer cursor-pointer" id="comprobante-input" name="comprobante_pago"
-                                   type="file">
-                            <p class="text-xs text-gray-500 mt-2">
-                                💡 Sube una foto clara del comprobante de transferencia (JPG, PNG)
-                            </p>
-                        </div>
+                        <input type="file" name="comprobante_pago" id="comprobante" accept="image/*"
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700">
+                        <p class="text-xs text-gray-500 mt-1">Sube una foto clara del comprobante</p>
                     </div>
                 </div>
 
-                <!-- Botón de Confirmar -->
-                <button class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-xl transition duration-300 transform hover:scale-105"
-                        type="submit">
-                    ✅ Confirmar Pedido
+                <!-- Botón de confirmación -->
+                <button type="submit" id="btn-confirmar"
+                        class="w-full bg-gray-400 text-white font-bold py-4 px-8 rounded-xl text-lg transition duration-300"
+                        disabled>
+                    Selecciona un método de pago
                 </button>
             </div>
 
             <!-- Columna Derecha: Resumen -->
             <div class="lg:col-span-1">
-                <div class="glass-card rounded-2xl shadow-xl p-6 sticky top-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">📦 Resumen del Pedido</h2>
+                <div class="bg-white rounded-2xl shadow-xl p-6 sticky top-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">📦 Resumen</h2>
 
-                    <!-- Productos -->
-                    <div class="space-y-3 mb-6 max-h-64 overflow-y-auto">
+                    <div class="space-y-3 mb-6">
                         {% for item in items %}
                         <div class="flex gap-3 pb-3 border-b">
-                            <img alt="{{ item.producto.nombre }}" class="w-16 h-16 object-cover rounded-lg"
-                                 onerror="this.src='https://placehold.co/100x100/667eea/fff?text=P'"
-                                 src="{{ item.producto.imagen.url }}">
+                            <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}"
+                                 class="w-12 h-12 object-cover rounded">
                             <div class="flex-1">
-                                <p class="font-semibold text-sm text-gray-800">{{ item.producto.nombre }}</p>
+                                <p class="font-semibold text-sm">{{ item.producto.nombre }}</p>
                                 <p class="text-xs text-gray-500">Cantidad: {{ item.cantidad }}</p>
                                 <p class="text-sm font-bold text-green-600">₲{{ item.subtotal|intcomma }}</p>
                             </div>
@@ -204,138 +181,182 @@
                         {% endfor %}
                     </div>
 
-                    <!-- Total -->
-                    <div class="space-y-2 mb-4 pb-4 border-b">
-                        <div class="flex justify-between text-gray-600">
-                            <span>Subtotal:</span>
-                            <span>₲{{ carrito.total|intcomma }}</span>
-                        </div>
-                        <div class="flex justify-between text-gray-600">
-                            <span>Items:</span>
-                            <span>{{ items|length }}</span>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between text-2xl font-bold text-green-600 mb-4">
+                    <div class="flex justify-between text-xl font-bold text-green-600 mb-4">
                         <span>Total:</span>
                         <span>₲{{ carrito.total|intcomma }}</span>
                     </div>
 
-                    <div class="text-xs text-gray-500 space-y-1">
-                        <p>✅ Compra 100% segura</p>
-                        <p id="resumen-metodo">💡 Selecciona tu método de pago</p>
+                    <div id="resumen-metodo" class="text-sm text-gray-500 text-center">
+                        💡 Selecciona tu método de pago
                     </div>
                 </div>
             </div>
         </div>
     </form>
-
-    <!-- Botón Volver -->
-    <div class="mt-8 text-center">
-        <a class="inline-block bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-8 rounded-full transition duration-300"
-           href="{% url 'productos:ver_carrito' %}">
-            ← Volver al Carrito
-        </a>
-    </div>
 </div>
-{% endblock %}
 
-{% block extra_css %}
-<style>
-    .payment-option {
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    .payment-option:hover:not(.disabled) {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-    .payment-option.selected {
-        border-color: #3b82f6 !important;
-        background: #eff6ff !important;
-        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
-    }
-    .payment-option.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-    const soloDigitales = {{ solo_digitales|yesno:"true,false" }};
+// Variables globales
+const soloDigitales = {{ solo_digitales|yesno:"true,false" }};
+let metodoActual = null;
 
-    // Manejar selección de método de pago
-    document.querySelectorAll('input[name="metodo_pago"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Remover selección visual de todos
-            document.querySelectorAll('.payment-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
+// Función principal para cambiar método
+function cambiarMetodo(metodo) {
+    console.log('🔄 Cambio a método:', metodo);
+    metodoActual = metodo;
 
-            // Agregar selección visual al seleccionado
-            const selectedLabel = this.closest('.payment-option');
-            selectedLabel.classList.add('selected');
+    // Actualizar estilos visuales
+    actualizarEstilos(metodo);
 
-            // Manejar visibilidad de secciones
-            const transferencia = document.getElementById('transferencia-section');
-            const direccion = document.getElementById('direccion-section');
-            const comprobanteInput = document.getElementById('comprobante-input');
-            const ciudadInput = document.getElementById('ciudad-input');
-            const direccionInput = document.getElementById('direccion-input');
-            const resumenMetodo = document.getElementById('resumen-metodo');
+    // Configurar secciones
+    configurarSecciones(metodo);
 
-            if (this.value === 'TRANSFERENCIA') {
-                transferencia.style.display = 'block';
-                comprobanteInput.required = true;
-                resumenMetodo.textContent = '🏦 Transferencia bancaria';
+    // Actualizar botón
+    actualizarBoton(metodo);
 
-                // Dirección obligatoria si hay físicos
-                if (!soloDigitales) {
-                    direccion.style.display = 'block';
-                    ciudadInput.required = true;
-                    direccionInput.required = true;
-                }
-            } else if (this.value === 'CONTRA_ENTREGA') {
-                transferencia.style.display = 'none';
-                comprobanteInput.required = false;
-                direccion.style.display = 'block';
-                ciudadInput.required = true;
-                direccionInput.required = true;
-                resumenMetodo.textContent = '💵 Pago en puerta';
-            } else {
-                transferencia.style.display = 'none';
-                comprobanteInput.required = false;
-                resumenMetodo.textContent = '💳 Pago con tarjeta';
+    // Mostrar mensaje
+    mostrarMensaje(metodo);
 
-                if (!soloDigitales) {
-                    direccion.style.display = 'block';
-                    ciudadInput.required = true;
-                    direccionInput.required = true;
-                }
-            }
-        });
+    console.log('✅ Método configurado:', metodo);
+}
+
+function actualizarEstilos(metodo) {
+    // Limpiar estilos
+    document.querySelectorAll('.metodo-pago').forEach(el => {
+        el.classList.remove('border-blue-500', 'bg-blue-50', 'border-green-500', 'bg-green-50');
+        el.classList.add('border-gray-300');
     });
 
-    // Validación del formulario
-    document.getElementById('checkout-form').addEventListener('submit', function(e) {
-        const metodoSeleccionado = document.querySelector('input[name="metodo_pago"]:checked');
+    // Aplicar estilo al seleccionado
+    const input = document.querySelector(`input[value="${metodo}"]`);
+    if (input) {
+        const label = input.closest('.metodo-pago');
+        if (metodo === 'TRANSFERENCIA') {
+            label.classList.remove('border-gray-300');
+            label.classList.add('border-blue-500', 'bg-blue-50');
+        } else if (metodo === 'CONTRA_ENTREGA') {
+            label.classList.remove('border-gray-300');
+            label.classList.add('border-green-500', 'bg-green-50');
+        }
+    }
+}
 
-        if (!metodoSeleccionado) {
+function configurarSecciones(metodo) {
+    const seccionDireccion = document.getElementById('seccion-direccion');
+    const seccionTransferencia = document.getElementById('seccion-transferencia');
+    const ciudad = document.getElementById('ciudad');
+    const direccion = document.getElementById('direccion');
+    const comprobante = document.getElementById('comprobante');
+
+    // Resetear required
+    if (ciudad) ciudad.required = false;
+    if (direccion) direccion.required = false;
+    if (comprobante) comprobante.required = false;
+
+    if (metodo === 'TRANSFERENCIA') {
+        // Mostrar transferencia
+        seccionTransferencia.style.display = 'block';
+        if (comprobante) comprobante.required = true;
+
+        // Dirección según productos
+        if (!soloDigitales) {
+            seccionDireccion.style.display = 'block';
+            if (ciudad) ciudad.required = true;
+            if (direccion) direccion.required = true;
+        } else {
+            seccionDireccion.style.display = 'none';
+        }
+
+    } else if (metodo === 'CONTRA_ENTREGA') {
+        // Ocultar transferencia
+        seccionTransferencia.style.display = 'none';
+
+        // Siempre mostrar dirección para contra entrega
+        seccionDireccion.style.display = 'block';
+        if (ciudad) ciudad.required = true;
+        if (direccion) direccion.required = true;
+    }
+}
+
+function actualizarBoton(metodo) {
+    const btn = document.getElementById('btn-confirmar');
+    if (!btn) return;
+
+    btn.disabled = false;
+    btn.classList.remove('bg-gray-400');
+
+    if (metodo === 'TRANSFERENCIA') {
+        btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        btn.textContent = '💰 Confirmar Pedido con Transferencia';
+    } else if (metodo === 'CONTRA_ENTREGA') {
+        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+        btn.textContent = '🚚 Confirmar Pedido - Pago en Puerta';
+    }
+}
+
+function mostrarMensaje(metodo) {
+    const estado = document.getElementById('metodo-estado');
+    const mensaje = document.getElementById('metodo-mensaje');
+    const resumen = document.getElementById('resumen-metodo');
+
+    if (!estado || !mensaje) return;
+
+    estado.classList.remove('hidden', 'bg-blue-100', 'text-blue-800', 'bg-green-100', 'text-green-800');
+
+    if (metodo === 'TRANSFERENCIA') {
+        estado.classList.add('bg-blue-100', 'text-blue-800');
+        mensaje.textContent = '🏦 Transfiere el monto exacto y sube tu comprobante';
+        resumen.textContent = '🏦 Transferencia bancaria';
+    } else if (metodo === 'CONTRA_ENTREGA') {
+        estado.classList.add('bg-green-100', 'text-green-800');
+        mensaje.textContent = '💵 Pagarás en efectivo cuando recibas el producto';
+        resumen.textContent = '💵 Pago en puerta';
+    }
+
+    estado.classList.remove('hidden');
+}
+
+// Validación del formulario
+document.getElementById('pedido-form').addEventListener('submit', function(e) {
+    console.log('📋 Validando envío...');
+
+    if (!metodoActual) {
+        e.preventDefault();
+        alert('Selecciona un método de pago');
+        return;
+    }
+
+    if (metodoActual === 'TRANSFERENCIA') {
+        const comprobante = document.getElementById('comprobante');
+        if (!comprobante || !comprobante.files.length) {
             e.preventDefault();
-            alert('Por favor, selecciona un método de pago');
-            return false;
+            alert('Sube el comprobante de transferencia');
+            return;
         }
+    }
 
-        if (metodoSeleccionado.value === 'TRANSFERENCIA') {
-            const comprobante = document.getElementById('comprobante-input');
-            if (!comprobante.files.length) {
-                e.preventDefault();
-                alert('Por favor, sube el comprobante de pago');
-                return false;
-            }
-        }
-    });
+    console.log('✅ Enviando formulario...');
+
+    // Deshabilitar botón
+    const btn = document.getElementById('btn-confirmar');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Procesando...';
+    }
+});
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Página lista. Solo digitales:', soloDigitales);
+
+    // Estado inicial
+    const seccionDireccion = document.getElementById('seccion-direccion');
+    if (!soloDigitales) {
+        seccionDireccion.style.display = 'block';
+    } else {
+        seccionDireccion.style.display = 'none';
+    }
+});
 </script>
+
 {% endblock %}

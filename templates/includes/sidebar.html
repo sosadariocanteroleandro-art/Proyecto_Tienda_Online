@@ -27,14 +27,23 @@
         <a href="{% url 'productos:afiliarme' %}" class="flex items-center py-3 px-4 rounded-lg bg-white bg-opacity-20 transition duration-300 group">
             <span class="font-medium">💼 Afiliarme</span>
         </a>
+
+        <!-- Crear Producto - Solo para Superusuarios -->
+        {% if user.is_superuser %}
         <a href="{% url 'productos:crear_producto' %}" class="flex items-center py-3 px-4 rounded-lg hover:bg-white hover:bg-opacity-20 transition duration-300 group">
             <span class="font-medium">➕ Crear Producto</span>
         </a>
+        {% else %}
+        <div class="flex items-center py-3 px-4 text-white text-opacity-40 cursor-not-allowed">
+            <span class="font-medium text-sm">➕ Crear Producto (Solo Admin)</span>
+        </div>
+        {% endif %}
 
         <!-- Sección de usuario -->
         <div class="mt-6 pt-6 border-t border-white border-opacity-30">
             <div class="mb-4 text-sm text-gray-200 px-2">
                 👤 {{ user.username }}
+                {% if user.is_superuser %}<span class="text-yellow-300 font-bold">(Admin)</span>{% endif %}
             </div>
             <form action="{% url 'usuarios:logout' %}" method="post" class="px-2">
                 {% csrf_token %}

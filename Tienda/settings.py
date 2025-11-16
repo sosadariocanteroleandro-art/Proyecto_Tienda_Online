@@ -7,8 +7,6 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-
-
 load_dotenv()  # Esta línea carga las variables del archivo .env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -98,7 +96,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]  # ← NUEVA LÍNEA
+STATICFILES_DIRS = [BASE_DIR / "staticfiles"]  # ← CORREGIDO: staticfiles en lugar de static
 
 # Media files (Archivos subidos por usuarios)  # ← NUEVA SECCIÓN
 MEDIA_URL = '/media/'
@@ -159,3 +157,13 @@ SOCIALACCOUNT_PROVIDERS = {
 SOCIALACCOUNT_LOGIN_ON_GET = True  # Login automático al callback de Google
 SOCIALACCOUNT_AUTO_SIGNUP = True   # No mostrar formulario adicional de registro
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Evitar paso extra de verificación de email
+
+# ============================================================================
+# CONFIGURACIÓN DEL ADMIN DE DJANGO
+# ============================================================================
+
+# Personalización del Admin de Django
+ADMIN_MEDIA_PREFIX = '/staticfiles/admin/'  # ← CORREGIDO: staticfiles en lugar de static
+ADMIN_SITE_HEADER = "🛍️ Tu Tienda - Panel de Administración"
+ADMIN_SITE_TITLE = "Tu Tienda Admin"
+ADMIN_INDEX_TITLE = "Bienvenido al Panel de Administración"

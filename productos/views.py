@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponse
@@ -97,7 +98,7 @@ def desafiliar_producto(request, producto_id):
 
     return redirect('productos:mis_productos')
 
-
+@staff_member_required
 @login_required
 def crear_producto(request):
     """
@@ -393,10 +394,9 @@ def eliminar_del_carrito(request, item_id):
     return redirect('productos:ver_carrito')
 
 
+# Fragmento de código para actualizar la vista confirmar_pedido en productos/views.py
 @login_required
 @transaction.atomic
-@login_required
-@login_required
 def confirmar_pedido(request):
     """Vista para confirmar el pedido con selección de método de pago"""
     try:
@@ -436,63 +436,124 @@ def confirmar_pedido(request):
             notas = request.POST.get('notas', '')
             comprobante = request.FILES.get('comprobante_pago')
 
+            # Obtener datos bancarios dinámicos si se enviaron
+            datos_banco_nombre = request.POST.get('datos_banco_nombre', '')
+            datos_banco_cuenta = request.POST.get('datos_banco_cuenta', '')
+            datos_banco_titular = request.POST.get('datos_banco_titular', '')
+            datos_banco_cedula = request.POST.get('datos_banco_cedula', '')
+
+            print(f"DEBUG: Método de pago recibido: {metodo_pago}")  # Debug
+
             # Validaciones básicas
-            if not metodo_pago or not nombre_completo or not email or not telefono:
-                messages.error(request, 'Por favor completa todos los campos obligatorios.')
+            if not metodo_pago:
+                messages.error(request, 'Por favor selecciona un método de pago.')
                 return redirect('productos:confirmar_pedido')
 
-            # Si hay productos físicos O es pago en puerta, validar dirección
-            if not solo_digitales or metodo_pago == 'CONTRA_ENTREGA':
-                if not direccion_envio or not ciudad:
-                    messages.error(request, 'La dirección y ciudad son obligatorias.')
+            if not nombre_completo or not email or not telefono:
+                messages.error(request, 'Por favor completa tu nombre, email y teléfono.')
+                return redirect('productos:confirmar_pedido')
+
+            # Validación específica por método de pago
+            if metodo_pago == 'TRANSFERENCIA':
+                print("DEBUG: Procesando transferencia")  # Debug
+
+                # Para transferencias: requiere comprobante siempre
+                if not comprobante:
+                    messages.error(request, 'Para transferencias debes subir el comprobante de pago.')
                     return redirect('productos:confirmar_pedido')
 
-            # Si es transferencia, validar comprobante
-            if metodo_pago == 'TRANSFERENCIA' and not comprobante:
-                messages.error(request, 'Por favor sube el comprobante de pago.')
+                # Si hay productos físicos, requiere dirección
+                if not solo_digitales:
+                    if not direccion_envio or not ciudad:
+                        messages.error(request, 'Para productos físicos necesitamos la dirección de entrega.')
+                        return redirect('productos:confirmar_pedido')
+
+            elif metodo_pago == 'CONTRA_ENTREGA':
+                print("DEBUG: Procesando contra entrega")  # Debug
+
+                # Para contra entrega: siempre requiere dirección
+                if not direccion_envio or not ciudad:
+                    messages.error(request, 'Para pago en puerta necesitamos la dirección de entrega.')
+                    return redirect('productos:confirmar_pedido')
+
+            elif metodo_pago == 'TARJETA':
+                messages.error(request, 'El método de pago con tarjeta aún no está disponible.')
                 return redirect('productos:confirmar_pedido')
 
-            # Validar stock y confirmar pedido
-            with transaction.atomic():
-                for item in items:
-                    if not item.producto.tiene_stock(item.cantidad):
-                        messages.error(
-                            request,
-                            f'Stock insuficiente para {item.producto.nombre}.'
-                        )
-                        return redirect('productos:ver_carrito')
+            # Crear o actualizar configuración bancaria si se enviaron datos
+            if metodo_pago == 'TRANSFERENCIA' and datos_banco_nombre and datos_banco_cuenta:
+                if not config_pagos:
+                    config_pagos = ConfiguracionPagos.objects.create(
+                        banco_nombre=datos_banco_nombre,
+                        banco_cuenta=datos_banco_cuenta,
+                        banco_titular=datos_banco_titular,
+                        banco_cedula=datos_banco_cedula
+                    )
+                    print("DEBUG: Configuración bancaria creada")  # Debug
+                else:
+                    config_pagos.banco_nombre = datos_banco_nombre
+                    config_pagos.banco_cuenta = datos_banco_cuenta
+                    config_pagos.banco_titular = datos_banco_titular
+                    config_pagos.banco_cedula = datos_banco_cedula
+                    config_pagos.save()
+                    print("DEBUG: Configuración bancaria actualizada")  # Debug
 
-                # Actualizar pedido
-                carrito.nombre_completo = nombre_completo
-                carrito.email = email
-                carrito.telefono = telefono
-                carrito.direccion_envio = direccion_envio
-                carrito.ciudad = ciudad
-                carrito.notas = notas
-                carrito.metodo_pago = metodo_pago
-
-                if comprobante:
-                    carrito.comprobante_pago = comprobante
-
-                carrito.estado = 'CONFIRMADO'
-                carrito.fecha_confirmacion = timezone.now()
-                carrito.save()
-
-                # Reducir stock
-                for item in items:
-                    item.producto.reducir_stock(item.cantidad)
-
-            # Enviar email (opcional)
+            # Procesar el pedido
             try:
-                enviar_email_confirmacion(carrito)
-            except Exception as e:
-                print(f"Error enviando email: {e}")
+                with transaction.atomic():
+                    # Verificar stock una vez más
+                    for item in items:
+                        if not item.producto.tiene_stock(item.cantidad):
+                            messages.error(
+                                request,
+                                f'Stock insuficiente para {item.producto.nombre}.'
+                            )
+                            return redirect('productos:ver_carrito')
 
-            messages.success(
-                request,
-                f'¡Pedido #{carrito.numero_pedido} confirmado exitosamente!'
-            )
-            return redirect('productos:detalle_pedido', pedido_id=carrito.id)
+                    # Actualizar el pedido
+                    carrito.nombre_completo = nombre_completo
+                    carrito.email = email
+                    carrito.telefono = telefono
+                    carrito.direccion_envio = direccion_envio
+                    carrito.ciudad = ciudad
+                    carrito.notas = notas
+                    carrito.metodo_pago = metodo_pago
+
+                    if comprobante:
+                        carrito.comprobante_pago = comprobante
+
+                    # Confirmar el pedido
+                    carrito.estado = 'CONFIRMADO'
+                    carrito.fecha_confirmacion = timezone.now()
+                    carrito.save()
+
+                    print(f"DEBUG: Pedido {carrito.numero_pedido} confirmado con método {metodo_pago}")  # Debug
+
+                    # Reducir stock
+                    for item in items:
+                        if item.producto.tipo_producto == 'FISICO':
+                            item.producto.reducir_stock(item.cantidad)
+
+                # Enviar email de confirmación
+                try:
+                    if metodo_pago == 'TRANSFERENCIA':
+                        enviar_email_confirmacion_transferencia(carrito, config_pagos)
+                    else:
+                        enviar_email_confirmacion(carrito)
+                    print("DEBUG: Email de confirmación enviado")  # Debug
+                except Exception as e:
+                    print(f"Error enviando email: {e}")
+
+                messages.success(
+                    request,
+                    f'¡Pedido #{carrito.numero_pedido} confirmado exitosamente!'
+                )
+                return redirect('productos:detalle_pedido', pedido_id=carrito.id)
+
+            except Exception as e:
+                print(f"Error procesando pedido: {e}")  # Debug
+                messages.error(request, 'Hubo un error al procesar tu pedido. Inténtalo de nuevo.')
+                return redirect('productos:confirmar_pedido')
 
         # GET - mostrar formulario
         context = {
@@ -509,6 +570,89 @@ def confirmar_pedido(request):
         return redirect('productos:home')
 
 
+# ✅ NUEVA FUNCIÓN: Email específico para transferencias
+def enviar_email_confirmacion_transferencia(pedido, config_pagos):
+    """
+    Función auxiliar para enviar email de confirmación para transferencias
+    """
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    asunto = f'Pedido #{pedido.numero_pedido} - Transferencia Recibida'
+
+    # Información bancaria en el email
+    info_bancaria = ""
+    if config_pagos:
+        info_bancaria = f"""
+Datos bancarios para futuras referencias:
+- Banco: {config_pagos.banco_nombre}
+- Cuenta: {config_pagos.banco_cuenta}
+- Titular: {config_pagos.banco_titular}
+{f'- CI/RUC: {config_pagos.banco_cedula}' if config_pagos.banco_cedula else ''}
+        """
+
+    mensaje = f"""
+Hola {pedido.nombre_completo},
+
+¡Gracias por tu compra!
+
+Tu pedido #{pedido.numero_pedido} ha sido recibido y hemos registrado tu comprobante de transferencia.
+
+Detalles del pedido:
+- Total: ₲{pedido.total:,.0f}
+- Método de pago: Transferencia Bancaria
+- Estado: {pedido.get_estado_display()}
+
+{info_bancaria}
+
+Verificaremos tu comprobante en las próximas horas y te contactaremos al {pedido.telefono} para coordinar la entrega.
+
+Saludos,
+Tu Tienda
+    """
+
+    send_mail(
+        asunto,
+        mensaje,
+        settings.DEFAULT_FROM_EMAIL,
+        [pedido.email],
+        fail_silently=True,
+    )
+
+
+# Función original para otros métodos de pago (ya existente)
+def enviar_email_confirmacion(pedido):
+    """
+    Función auxiliar para enviar email de confirmación
+    """
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    asunto = f'Pedido #{pedido.numero_pedido} - Confirmación'
+    mensaje = f"""
+Hola {pedido.nombre_completo},
+
+¡Gracias por tu compra!
+
+Tu pedido #{pedido.numero_pedido} ha sido recibido y está siendo procesado.
+
+Detalles del pedido:
+- Total: ₲{pedido.total:,.0f}
+- Estado: {pedido.get_estado_display()}
+
+Te contactaremos pronto para coordinar la entrega.
+
+Saludos,
+Tu Tienda
+    """
+
+    send_mail(
+        asunto,
+        mensaje,
+        settings.DEFAULT_FROM_EMAIL,
+        [pedido.email],
+        fail_silently=True,
+    )
 def enviar_email_confirmacion(pedido):
     """
     Función auxiliar para enviar email de confirmación
