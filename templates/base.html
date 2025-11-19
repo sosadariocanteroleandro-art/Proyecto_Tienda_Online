@@ -8,50 +8,55 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- 🚀 ALPINE.JS - Para menús desplegables -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background-color: #f9fafb;
             min-height: 100vh;
         }
+
+        /* 🎨 COLORES ACORDES AL SISTEMA */
         .glass-card {
             backdrop-filter: blur(10px);
             background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(229, 231, 235, 0.8);
         }
         .nav-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4f46e5 0%, #5b67f1 100%);
         }
-        .sidebar {
-            width: 0;
-            transition: all 0.3s ease-in-out;
-            transform: translateX(-100%);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        /* 🎨 NUEVO SIDEBAR AUTO-EXPANDIBLE */
+        .sidebar-auto-expand {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .sidebar.open {
-            width: 280px;
-            transform: translateX(0);
+
+        /* Ajustar el contenido principal para el nuevo sidebar */
+        .main-content {
+            margin-left: 64px; /* Espacio para sidebar contraído (w-16) */
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .overlay {
-            display: none;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .overlay.visible {
-            display: block;
-        }
+
         .stat-card {
             transition: all 0.3s ease;
+            background: white;
+            border: 1px solid #e5e7eb;
         }
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
         .quick-action {
             transition: all 0.3s ease;
+            background: white;
+            border: 1px solid #e5e7eb;
         }
         .quick-action:hover {
-            transform: scale(1.05);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -60,72 +65,162 @@
         .fade-in {
             animation: fadeIn 0.6s ease-out;
         }
+
+        /* Responsive: En móvil el sidebar se oculta completamente */
+        @media (max-width: 768px) {
+            .sidebar-auto-expand {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar-mobile-open {
+                transform: translateX(0) !important;
+            }
+        }
+
+        /* 🎨 BOTONES ACORDES AL SISTEMA */
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4338ca;
+        }
+        .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
     </style>
 </head>
-<body class="min-h-screen relative">
-    <!-- Overlay -->
-    <div id="overlay" class="overlay fixed inset-0 z-40 hidden"></div>
+<body class="min-h-screen relative bg-gray-50">
+    <!-- Overlay para móvil -->
+    <div id="overlay" class="fixed inset-0 z-40 bg-black bg-opacity-50 hidden md:hidden"></div>
 
-    <!-- Sidebar -->
+    <!-- Sidebar Auto-Expandible -->
     {% include 'includes/sidebar.html' %}
 
-    <!-- Navbar Moderno -->
-    <nav class="nav-gradient shadow-2xl py-4 px-6 md:px-12 fixed top-0 w-full z-50">
+    <!-- Navbar limpio y moderno (acorde al sistema) -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 py-4 px-6 md:px-8 fixed top-0 w-full z-40 main-content">
         <div class="flex justify-between items-center max-w-7xl mx-auto">
-            <button id="open-menu" class="text-white hover:text-gray-200 transition duration-300 text-xl">☰</button>
-            <a href="{% url 'usuarios:home' %}" class="text-2xl md:text-3xl font-bold text-white hover:text-gray-200 transition duration-300">🛍️ Tu Tienda</a>
-            <div class="hidden md:flex items-center space-x-4">
+            <!-- Botón hamburguesa solo en móvil -->
+            <button id="open-menu" class="md:hidden text-gray-600 hover:text-gray-900 transition duration-200 text-xl">☰</button>
+
+            <!-- Logo/Título -->
+            <a href="{% url 'usuarios:home' %}" class="text-xl md:text-2xl font-bold text-gray-900 hover:text-blue-600 transition duration-200 md:flex-1 md:text-left">Tu Tienda</a>
+
+            <div class="flex items-center space-x-4">
                 {% if user.is_authenticated %}
-                    <span class="text-white font-medium">Hola, {{ user.username }}</span>
+                    <div class="hidden md:flex items-center space-x-3">
+                        <span class="text-sm text-gray-500">Bienvenido,</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                <span class="text-white text-sm font-semibold">{{ user.username|first|upper }}</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">{{ user.username }}</span>
+                            {% if user.es_vendedor %}
+                                {% if user.is_superuser %}
+                                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">Admin</span>
+                                {% else %}
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Vendedor</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Comprador</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 {% else %}
-                    <span class="text-white font-medium">Dashboard</span>
+                    <div class="hidden md:flex items-center space-x-3">
+                        <a href="{% url 'usuarios:login' %}" class="text-gray-600 hover:text-gray-900 font-medium">Iniciar Sesión</a>
+                        <a href="{% url 'usuarios:registro' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition duration-200">Registrarse</a>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <!-- Mensajes -->
+    <!-- Mensajes (acordes al sistema) -->
     {% if messages %}
-        <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+        <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4 main-content">
             {% for message in messages %}
-                <div class="{% if message.tags == 'success' %}bg-green-500{% elif message.tags == 'error' %}bg-red-500{% elif message.tags == 'warning' %}bg-yellow-500{% else %}bg-blue-500{% endif %} text-white p-4 rounded-lg shadow-lg text-center font-medium">
+                <div class="{% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-800{% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %} p-4 rounded-lg shadow-sm text-center font-medium mb-4">
                     {{ message }}
                 </div>
             {% endfor %}
         </div>
     {% endif %}
 
-    <!-- Contenido -->
-    <main class="pt-24 pb-16 px-4 md:px-12">
+    <!-- Contenido Principal (ajustado para sidebar siempre visible) -->
+    <main class="pt-20 pb-16 px-4 md:px-8 main-content">
         <div class="max-w-7xl mx-auto">
             {% block content %}
             {% endblock %}
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="w-full bg-white shadow-lg mt-8 py-6">
-        <div class="container mx-auto text-center text-gray-600">
-            <p>&copy; 2025 Tu Tienda</p>
+    <!-- Footer (acorde al sistema) -->
+    <footer class="w-full bg-white border-t border-gray-200 mt-8 py-6 main-content">
+        <div class="container mx-auto px-4 md:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
+                <p>&copy; 2025 Tu Tienda. Todos los derechos reservados.</p>
+                <div class="flex space-x-4 mt-2 md:mt-0">
+                    <a href="#" class="hover:text-gray-700 transition duration-200">Términos</a>
+                    <a href="#" class="hover:text-gray-700 transition duration-200">Privacidad</a>
+                    <a href="#" class="hover:text-gray-700 transition duration-200">Soporte</a>
+                </div>
+            </div>
         </div>
     </footer>
 
     <!-- JavaScript -->
     <script>
+        // Funcionalidad para móvil (mantener la funcionalidad original)
         const openMenuBtn = document.getElementById('open-menu');
-        const closeMenuBtn = document.getElementById('close-menu');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('visible');
-            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        function toggleSidebarMobile() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('sidebar-mobile-open');
+                overlay.classList.toggle('hidden');
+                document.body.style.overflow = sidebar.classList.contains('sidebar-mobile-open') ? 'hidden' : '';
+            }
         }
 
-        if (openMenuBtn) openMenuBtn.addEventListener('click', toggleSidebar);
-        if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleSidebar);
-        if (overlay) overlay.addEventListener('click', toggleSidebar);
+        if (openMenuBtn) openMenuBtn.addEventListener('click', toggleSidebarMobile);
+        if (overlay) overlay.addEventListener('click', toggleSidebarMobile);
+
+        // Cerrar sidebar móvil al cambiar a desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('sidebar-mobile-open');
+                overlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // 🔧 DEBUGGING ALPINE.JS
+        document.addEventListener('alpine:init', () => {
+            console.log('✅ Alpine.js cargado correctamente!');
+        });
+
+        // Auto-hide messages after 5 seconds
+        const messages = document.querySelectorAll('.fixed [class*="bg-"]:has-text("{{ message }}")');
+        if (messages.length > 0) {
+            setTimeout(() => {
+                messages.forEach(msg => {
+                    msg.style.transition = 'all 0.3s ease-out';
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-20px)';
+                    setTimeout(() => msg.remove(), 300);
+                });
+            }, 5000);
+        }
     </script>
 </body>
 </html>
