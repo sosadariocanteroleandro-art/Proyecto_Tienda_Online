@@ -6,12 +6,20 @@ from django.utils.translation import gettext_lazy as _
 
 class CustomUser(AbstractUser):
     """
-    Modelo de usuario personalizado con sistema de roles dinámicos.
+    Modelo de usuario personalizado con sistema de roles y referencia de afiliados.
     """
     # Tipos de usuario
     TIPO_USUARIO_CHOICES = (
         ('COMPRADOR', 'Comprador'),
         ('VENDEDOR', 'Vendedor/Afiliado'),
+    )
+
+    # Origen de registro (NUEVO)
+    ORIGEN_REGISTRO_CHOICES = (
+        ('DIRECTO', 'Registro directo'),
+        ('AFILIADO', 'Vía link de afiliado'),
+        ('GOOGLE', 'Google OAuth'),
+        ('ADMIN', 'Creado por admin'),
     )
 
     nombre = models.CharField(max_length=100)
@@ -23,7 +31,7 @@ class CustomUser(AbstractUser):
         }
     )
 
-    # Campo para tipo de usuario (NUEVO)
+    # Campo para tipo de usuario
     tipo_usuario = models.CharField(
         max_length=10,
         choices=TIPO_USUARIO_CHOICES,
@@ -31,14 +39,42 @@ class CustomUser(AbstractUser):
         verbose_name='Tipo de Usuario'
     )
 
-    # Fecha de upgrade a vendedor (NUEVO)
+    # ======= CAMPOS PARA ORIGEN Y REFERENCIA =======
+    # Origen de registro
+    origen_registro = models.CharField(
+        max_length=10,
+        choices=ORIGEN_REGISTRO_CHOICES,
+        default='DIRECTO',
+        verbose_name='Origen de Registro'
+    )
+
+    # Afiliado que lo refirió
+    referido_por = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='usuarios_referidos',
+        verbose_name='Referido por'
+    )
+
+    # Fecha de referencia
+    fecha_referido = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha de Referido',
+        help_text='Fecha cuando se registró vía link de afiliado'
+    )
+    # ===============================================
+
+    # Fecha de upgrade a vendedor
     fecha_upgrade_vendedor = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name='Fecha de Upgrade a Vendedor'
     )
 
-    # Campo para tracking de comisiones (NUEVO)
+    # Campo para tracking de comisiones
     comisiones_ganadas = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -46,7 +82,7 @@ class CustomUser(AbstractUser):
         verbose_name='Comisiones Totales Ganadas'
     )
 
-    # Campo para indicar si puede crear productos (NUEVO)
+    # Campo para indicar si puede crear productos
     puede_crear_productos = models.BooleanField(
         default=False,
         verbose_name='Puede Crear Productos'
@@ -70,7 +106,7 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_tipo_usuario_display()})"
 
-    # MÉTODOS PARA GESTIÓN DE ROLES
+    # MÉTODOS PARA GESTIÓN DE ROLES Y ORIGEN
 
     def es_comprador(self):
         """Verifica si el usuario es solo comprador"""
@@ -83,6 +119,27 @@ class CustomUser(AbstractUser):
     def puede_comprar(self):
         """Cualquier usuario autenticado puede comprar"""
         return self.is_authenticated
+
+    # ======= NUEVOS MÉTODOS PARA ORIGEN Y REFERENCIA =======
+    def es_comprador_normal(self):
+        """Comprador registrado directamente o por Google (sin afiliado)"""
+        return (self.tipo_usuario == 'COMPRADOR' and
+                self.origen_registro in ['DIRECTO', 'GOOGLE'])
+
+    def es_comprador_via_afiliado(self):
+        """Comprador que llegó vía link de afiliado"""
+        return (self.tipo_usuario == 'COMPRADOR' and
+                self.origen_registro == 'AFILIADO')
+
+    def debe_mostrar_promos_vendedor(self):
+        """Determina si debe ver promociones para ser vendedor"""
+        return self.es_comprador_via_afiliado()
+
+    def puede_ver_panel_afiliacion(self):
+        """Determina si puede ver el panel completo de afiliación"""
+        return self.es_vendedor()
+
+    # ====================================================
 
     def puede_afiliarse(self):
         """Solo vendedores pueden afiliarse a productos"""
@@ -119,61 +176,4 @@ class CustomUser(AbstractUser):
             return f"{self.username}_{self.id}"
         return None
 
-
-class Pedido(models.Model):
-    """
-    Modelo para pedidos
-    """
-    ESTADOS = [
-        ('PENDIENTE', 'Pendiente'),
-        ('COMPLETADO', 'Completado'),
-        ('CANCELADO', 'Cancelado'),
-    ]
-
-    usuario = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name='pedidos_usuario'
-    )
-    afiliado_referido = models.ForeignKey(
-        CustomUser,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='ventas_referidas'
-    )
-    estado = models.CharField(
-        max_length=20,
-        choices=ESTADOS,
-        default='PENDIENTE'
-    )
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    comision_total = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        default=0
-    )
-
-    def __str__(self):
-        return f"Pedido {self.id} - {self.usuario.username}"
-
-
-class ItemPedido(models.Model):
-    """
-    Modelo para los items dentro de un pedido
-    """
-    pedido = models.ForeignKey(
-        Pedido,
-        on_delete=models.CASCADE,
-        related_name='items'
-    )
-    # Referencia al modelo Producto de la app productos
-    producto = models.ForeignKey(
-        'productos.Producto',  # ← Referencia al Producto de la app productos
-        on_delete=models.CASCADE
-    )
-    cantidad = models.PositiveIntegerField(default=1)
-    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
-
-    def __str__(self):
-        return f"{self.cantidad} x {self.producto.nombre}"
+# NOTA: Pedido e ItemPedido están en productos.models, no aquí

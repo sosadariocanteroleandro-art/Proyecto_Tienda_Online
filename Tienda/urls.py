@@ -1,23 +1,28 @@
+# urls.py principal (Tienda/urls.py)
+
 from django.contrib import admin
 from django.urls import path, include
-# AGREGAR ESTAS IMPORTACIONES:
 from django.conf import settings
 from django.conf.urls.static import static
 
+# Importar la vista de landing page
+from usuarios.views import landing_page
+
 urlpatterns = [
-    # Panel de administración
     path('admin/', admin.site.urls),
 
-    # URLs de allauth (¡ESENCIALES!)
-    path('accounts/', include('allauth.urls')),  # ← ¡AGREGA ESTA LÍNEA!
+    # ======= LANDING PAGE COMO PÁGINA PRINCIPAL =======
+    path('', landing_page, name='landing_page'),
 
-    # URLs de la app productos
-    path('productos/', include('productos.urls')),
+    # ======= AUTENTICACIÓN OAUTH =======
+    path('accounts/', include('allauth.urls')),  # URLs de allauth para Google OAuth
 
-    # URLs de la app usuarios (debe ir al final para no interferir)
-    path('', include('usuarios.urls')),  # La página principal y login/registro se manejan aquí
+    # ======= APPS PRINCIPALES =======
+    path('usuarios/', include('usuarios.urls')),  # Dashboard y gestión de usuarios
+    path('productos/', include('productos.urls')),  # Productos y afiliación
 ]
 
-# ✅ CONFIGURACIÓN PARA ARCHIVOS MEDIA (IMÁGENES)
+# Servir archivos estáticos en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

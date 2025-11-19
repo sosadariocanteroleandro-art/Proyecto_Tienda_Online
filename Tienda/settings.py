@@ -123,7 +123,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 semanas en segundos
 
 # ✅ Configuración para @login_required - ¡CORREGIDO!
-LOGIN_URL = '/login/'  # ← CAMBIO IMPORTANTE: antes era '/usuarios/login/'
+LOGIN_URL = '/usuarios/login/'  # ← CAMBIO CRÍTICO: Ahora apunta a la URL correcta
 LOGIN_REDIRECT_URL = '/productos/mis-productos/'  # Redirige a "Mis Productos" tras login
 
 AUTHENTICATION_BACKENDS = [
@@ -167,3 +167,35 @@ ADMIN_MEDIA_PREFIX = '/staticfiles/admin/'  # ← CORREGIDO: staticfiles en luga
 ADMIN_SITE_HEADER = "🛍️ Tu Tienda - Panel de Administración"
 ADMIN_SITE_TITLE = "Tu Tienda Admin"
 ADMIN_INDEX_TITLE = "Bienvenido al Panel de Administración"
+
+
+# Agregar al final de tu settings.py
+
+# ============================================================================
+# 🏷️ CONFIGURACIÓN DE LA PLATAFORMA (FÁCIL DE CAMBIAR)
+# ============================================================================
+
+# Información de la plataforma
+PLATFORM_NAME = "AfiliaMax"
+PLATFORM_TAGLINE = "Tu plataforma de afiliación en Paraguay"
+PLATFORM_DESCRIPTION = "Conecta vendedores con productos de calidad y genera ingresos por comisiones"
+
+# Información de contacto (cambiar por datos reales)
+PLATFORM_EMAIL = "info@afiliamax.com"
+PLATFORM_PHONE = "+595 981 123456"
+PLATFORM_WHATSAPP = "+595981123456"
+
+# Redes sociales (opcional)
+PLATFORM_FACEBOOK = ""
+PLATFORM_INSTAGRAM = ""
+PLATFORM_TWITTER = ""
+
+# Configuraciones de comisión para mostrar en landing
+DEFAULT_COMMISSION_RATE = 15  # Porcentaje promedio
+MIN_COMMISSION_RATE = 10
+MAX_COMMISSION_RATE = 25
+
+# Colores principales (opcional para personalizar)
+PRIMARY_COLOR = "#3B82F6"  # Azul
+SECONDARY_COLOR = "#10B981"  # Verde
+ACCENT_COLOR = "#8B5CF6"  # Morado
