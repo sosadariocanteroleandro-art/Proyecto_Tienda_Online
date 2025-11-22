@@ -150,17 +150,36 @@
             </div>
             {% endif %}
 
-            <!-- ============= MENÚ VENTAS (DESPLEGABLE) ============= -->
+            <!-- ============= MIS COMPRAS (BOTÓN INDEPENDIENTE) ============= -->
+            <a href="{% url 'usuarios:comprador_dashboard' %}"
+               class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-all duration-200 group/item">
+                <div class="w-5 h-5 flex-shrink-0 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                </div>
+                <span x-show="isExpanded"
+                      x-transition:enter="transition ease-out duration-200 delay-75"
+                      x-transition:enter-start="opacity-0 transform translate-x-2"
+                      x-transition:enter-end="opacity-100 transform translate-x-0"
+                      x-transition:leave="transition ease-in duration-150"
+                      x-transition:leave-start="opacity-100"
+                      x-transition:leave-end="opacity-0"
+                      class="ml-3 font-medium">Mis compras</span>
+            </a>
+
+            <!-- ============= MENÚ VENTAS (DESPLEGABLE) - SOLO PARA VENDEDORES ============= -->
+            {% if user.es_vendedor %}
             <div class="relative">
                 <button @click="if(isExpanded) ventas = !ventas"
                         class="flex items-center w-full p-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-all duration-200 group/item focus:outline-none">
                     <div class="w-5 h-5 flex-shrink-0 flex items-center justify-center">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6"></path>
                         </svg>
                     </div>
                     <div x-show="isExpanded" class="ml-3 flex items-center justify-between flex-1">
-                        <span class="font-medium">Ventas</span>
+                        <span class="font-medium">Mis ventas</span>
                         <svg class="w-4 h-4 transition-transform duration-200 text-gray-400"
                              :class="ventas ? 'rotate-180' : ''"
                              fill="currentColor" viewBox="0 0 20 20">
@@ -179,31 +198,17 @@
                      x-transition:leave-end="opacity-0 max-h-0"
                      class="ml-6 mt-1 space-y-1 overflow-hidden border-l-2 border-gray-100 pl-4">
 
-                    {% if user.es_vendedor %}
                     <a href="{% url 'productos:estadisticas_vendedor' %}"
                        class="block py-2 px-3 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-200">
                         Gestión de ventas
                     </a>
                     <a href="{% url 'productos:mis_productos' %}"
                        class="block py-2 px-3 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-200">
-                        Mis ventas
-                    </a>
-                    {% endif %}
-
-                    <a href="{% url 'productos:mis_pedidos' %}"
-                       class="block py-2 px-3 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-200">
-                        Mis pedidos
-                    </a>
-                    <a href="{% url 'productos:ver_carrito' %}"
-                       class="block py-2 px-3 text-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition duration-200">
-                        Mi carrito
-                    </a>
-                    <a href="{% url 'usuarios:comprador_dashboard' %}"
-                       class="block py-2 px-3 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition duration-200 font-medium">
-                        Ver mis compras
+                        Reportes de ventas
                     </a>
                 </div>
             </div>
+            {% endif %}
 
             <!-- ============= MENÚ CARTERA (DESPLEGABLE) ============= -->
             <div class="relative">

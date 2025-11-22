@@ -6,9 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/productos/templates/productos/mis_links_afiliado.html" beforeDir="false" afterPath="$PROJECT_DIR$/productos/templates/productos/mis_links_afiliado.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/afiliados/views.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/includes/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/includes/sidebar.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
