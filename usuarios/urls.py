@@ -8,6 +8,10 @@ urlpatterns = [
     path('', views.home, name='home'),  # Dashboard principal para usuarios autenticados
     path('perfil/', views.perfil_usuario, name='perfil'),
 
+    # ======= NUEVA RUTA PARA SALDO =======
+    path('mi-saldo/', views.mi_saldo, name='mi_saldo'),  # ← NUEVO
+    path('solicitar-retiro/', views.solicitar_retiro, name='solicitar_retiro'),  # ← NUEVO
+
     # ======= AUTENTICACIÓN =======
     path('login/', views.login_view, name='login'),
     path('registro/', views.registro_usuario, name='registro'),

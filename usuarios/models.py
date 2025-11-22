@@ -88,6 +88,72 @@ class CustomUser(AbstractUser):
         verbose_name='Puede Crear Productos'
     )
 
+    # ======= CAMPOS PARA AFILIACIÓN =======
+    # Datos personales para afiliación
+    tipo_persona = models.CharField(
+        max_length=20,
+        choices=[('fisica', 'Persona Física'), ('juridica', 'Persona Jurídica')],
+        blank=True,
+        verbose_name='Tipo de Persona'
+    )
+
+    documento_identidad = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name='Documento de Identidad'
+    )
+
+    pais_residencia = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='País de Residencia'
+    )
+
+    telefono = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Teléfono'
+    )
+
+    # Datos opcionales para mejorar el perfil de afiliado
+    experiencia_marketing = models.TextField(
+        blank=True,
+        verbose_name='Experiencia en Marketing',
+        help_text='Describe tu experiencia previa en marketing digital o ventas (opcional)'
+    )
+
+    biografia_afiliado = models.TextField(
+        blank=True,
+        verbose_name='Biografía/Presentación',
+        help_text='Cuéntanos sobre ti y por qué quieres ser afiliado (opcional)'
+    )
+
+    canales_promocion = models.TextField(
+        blank=True,
+        verbose_name='Canales de Promoción',
+        help_text='¿Dónde planeas promocionar? (redes sociales, blog, email, etc.) - opcional'
+    )
+
+    areas_interes = models.TextField(
+        blank=True,
+        verbose_name='Áreas de Interés',
+        help_text='¿Qué tipo de productos te interesa promocionar? (opcional)'
+    )
+
+    # Control de acceso a herramientas de afiliación
+    datos_afiliacion_completos = models.BooleanField(
+        default=False,
+        verbose_name='Datos de Afiliación Completos',
+        help_text='Indica si completó los datos mínimos para poder afiliarse a productos'
+    )
+
+    fecha_completado_perfil = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='Fecha Completado Perfil Afiliación'
+    )
+    # =====================================
+
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='custom_user_groups',
@@ -139,11 +205,70 @@ class CustomUser(AbstractUser):
         """Determina si puede ver el panel completo de afiliación"""
         return self.es_vendedor()
 
+    # ======= NUEVOS MÉTODOS PARA AFILIACIÓN =======
+    def puede_afiliarse_a_productos(self):
+        """
+        Verifica si puede afiliarse a productos.
+        Requiere: ser vendedor + tener datos completos
+        """
+        return self.es_vendedor() and self.datos_afiliacion_completos
+
+    def completar_datos_afiliacion(self):
+        """
+        Marca los datos de afiliación como completos si cumple requisitos mínimos
+        """
+        # Campos obligatorios para afiliación
+        campos_obligatorios = [
+            self.tipo_persona,
+            self.documento_identidad,
+            self.pais_residencia,
+        ]
+
+        if all(campo for campo in campos_obligatorios):
+            self.datos_afiliacion_completos = True
+            if not self.fecha_completado_perfil:
+                self.fecha_completado_perfil = timezone.now()
+            return True
+        else:
+            self.datos_afiliacion_completos = False
+            return False
+
+    def get_campos_faltantes_afiliacion(self):
+        """
+        Retorna lista de campos obligatorios faltantes para afiliación
+        """
+        campos_faltantes = []
+
+        if not self.tipo_persona:
+            campos_faltantes.append('Tipo de Persona')
+        if not self.documento_identidad:
+            campos_faltantes.append('Documento de Identidad')
+        if not self.pais_residencia:
+            campos_faltantes.append('País de Residencia')
+
+        return campos_faltantes
+
+    def get_porcentaje_completitud_perfil(self):
+        """
+        Retorna porcentaje de completitud del perfil de afiliación (0-100)
+        """
+        campos_totales = [
+            self.tipo_persona,
+            self.documento_identidad,
+            self.pais_residencia,
+            self.telefono,
+            self.biografia_afiliado,
+            self.canales_promocion,
+        ]
+
+        campos_completos = sum(1 for campo in campos_totales if campo)
+        return int((campos_completos / len(campos_totales)) * 100)
+
     # ====================================================
 
     def puede_afiliarse(self):
-        """Solo vendedores pueden afiliarse a productos"""
-        return self.es_vendedor()
+        """Solo vendedores pueden afiliarse a productos (método legacy)"""
+        return self.puede_afiliarse_a_productos()
 
     def upgrade_a_vendedor(self):
         """Convierte un comprador a vendedor"""
@@ -175,5 +300,90 @@ class CustomUser(AbstractUser):
         if self.es_vendedor():
             return f"{self.username}_{self.id}"
         return None
+
+    # usuarios/models.py - AGREGAR ESTOS CAMPOS AL FINAL DE LA CLASE CustomUser
+
+    # ================ CAMPOS PARA GESTIÓN DE SALDO Y RETIROS ================
+    # Saldo y comisiones
+    saldo_disponible = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Saldo Disponible para Retiro"
+    )
+
+    saldo_retirado = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        verbose_name="Total Retirado"
+    )
+
+    retiro_minimo = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=50000,
+        verbose_name="Retiro Mínimo (Gs)"
+    )
+
+    # Datos bancarios para retiros
+    tipo_retiro = models.CharField(
+        max_length=20,
+        choices=[
+            ('banco', 'Transferencia Bancaria'),
+            ('tigo_money', 'Tigo Money'),
+            ('personal_pay', 'Personal Pay'),
+            ('weepay', 'WeePayy'),
+        ],
+        blank=True,
+        verbose_name="Método de Retiro Preferido"
+    )
+
+    # Para transferencias bancarias
+    banco_nombre = models.CharField(max_length=100, blank=True, verbose_name="Nombre del Banco")
+    numero_cuenta = models.CharField(max_length=50, blank=True, verbose_name="Número de Cuenta")
+    tipo_cuenta = models.CharField(
+        max_length=20,
+        choices=[
+            ('corriente', 'Corriente'),
+            ('ahorro', 'Ahorro'),
+        ],
+        blank=True,
+        verbose_name="Tipo de Cuenta"
+    )
+    titular_cuenta = models.CharField(max_length=100, blank=True, verbose_name="Titular de la Cuenta")
+
+    # Para billeteras digitales
+    numero_celular_retiro = models.CharField(max_length=20, blank=True, verbose_name="Celular para Retiro")
+    nombre_titular_billetera = models.CharField(max_length=100, blank=True, verbose_name="Nombre del Titular")
+
+    # Control de retiros
+    datos_retiro_completos = models.BooleanField(default=False, verbose_name="Datos de Retiro Completos")
+    retiros_pendientes = models.BooleanField(default=False, verbose_name="Tiene Retiros Pendientes")
+    fecha_ultimo_retiro = models.DateTimeField(blank=True, null=True, verbose_name="Último Retiro")
+
+    # MÉTODOS ADICIONALES PARA AGREGAR AL FINAL DE LA CLASE
+    def puede_solicitar_retiro(self):
+        """Verifica si el usuario puede solicitar un retiro"""
+        return (
+                self.es_vendedor() and
+                self.datos_retiro_completos and
+                self.saldo_disponible >= self.retiro_minimo and
+                not self.retiros_pendientes
+        )
+
+    def saldo_total_comisiones(self):
+        """Calcula el saldo total incluyendo disponible y retirado"""
+        return self.saldo_disponible + self.saldo_retirado
+
+    def get_tipo_retiro_display_custom(self):
+        """Display personalizado para tipo de retiro"""
+        tipos = {
+            'banco': '🏦 Transferencia Bancaria',
+            'tigo_money': '📱 Tigo Money',
+            'personal_pay': '📱 Personal Pay',
+            'weepay': '📱 WeePayy',
+        }
+        return tipos.get(self.tipo_retiro, 'No configurado')
 
 # NOTA: Pedido e ItemPedido están en productos.models, no aquí

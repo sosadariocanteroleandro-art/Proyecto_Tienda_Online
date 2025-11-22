@@ -5,16 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e2a27ac9-84d1-4f59-8936-ec0eab695e32" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/usuarios/decorators.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/mi_saldo.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/solicitar_retiro.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/apps.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/migrations/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/models.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/tests.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/urls.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/afiliados/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tienda/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/Tienda/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/productos/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/productos/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/includes/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/includes/sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/templates/usuarios/perfil.html" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/templates/usuarios/perfil.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/usuarios/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/usuarios/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -133,18 +137,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/admin.py</url>
-          <line>108</line>
+          <line>115</line>
           <option name="timeStamp" value="23" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/admin.py</url>
-          <line>228</line>
+          <line>299</line>
           <option name="timeStamp" value="24" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/productos/admin.py</url>
-          <line>231</line>
-          <option name="timeStamp" value="25" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/productos/models.py</url>
@@ -155,6 +154,21 @@
           <url>file://$PROJECT_DIR$/productos/models.py</url>
           <line>84</line>
           <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/usuarios/views.py</url>
+          <line>330</line>
+          <option name="timeStamp" value="62" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/usuarios/models.py</url>
+          <line>6</line>
+          <option name="timeStamp" value="63" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/productos/models.py</url>
+          <line>389</line>
+          <option name="timeStamp" value="64" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

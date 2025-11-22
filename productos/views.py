@@ -10,6 +10,7 @@ from django.db import transaction
 from django.utils import timezone
 from .models import Producto, Pedido, ItemPedido, ConfiguracionPagos
 from .forms import ProductoForm
+from usuarios.decorators import datos_afiliacion_requeridos  # ← NUEVA IMPORTACIÓN
 
 
 def home_tienda(request):
@@ -28,9 +29,12 @@ def home_tienda(request):
     return render(request, 'productos/home.html', context)
 
 
+@login_required
+@datos_afiliacion_requeridos  # ← DECORADOR AGREGADO
 def afiliarme(request):
     """
-    Vista de la página de afiliación
+    Vista de la página de afiliación.
+    REQUIERE: datos de afiliación completos.
     """
     productos_fisicos = Producto.objects.filter(tipo_producto='FISICO', activo=True)
     productos_digitales = Producto.objects.filter(tipo_producto='DIGITAL', activo=True)
@@ -47,23 +51,32 @@ def afiliarme(request):
 def mis_productos(request):
     """
     Vista para mostrar los productos afiliados del usuario
-    y también los productos que creó como vendedor
+    y también los productos que creó como vendedor.
+    NO requiere datos completos (solo muestra estado).
     """
     productos_afiliados = request.user.productos_afiliados.all()
     productos_creados = request.user.productos_creados.all()
 
+    # Agregar información sobre estado de afiliación
+    puede_afiliarse = (request.user.es_vendedor() and
+                      getattr(request.user, 'datos_afiliacion_completos', False))
+
     context = {
         'productos_afiliados': productos_afiliados,
         'productos_creados': productos_creados,
+        'puede_afiliarse': puede_afiliarse,
+        'datos_completos': getattr(request.user, 'datos_afiliacion_completos', False),
     }
 
     return render(request, 'productos/mis_productos.html', context)
 
 
 @login_required
+@datos_afiliacion_requeridos  # ← DECORADOR AGREGADO
 def afiliar_producto(request, producto_id):
     """
-    Vista para afiliar al usuario logueado a un producto
+    Vista para afiliar al usuario logueado a un producto.
+    REQUIERE: datos de afiliación completos.
     """
     if request.method == 'POST':
         producto = get_object_or_404(Producto, id=producto_id)
@@ -81,9 +94,11 @@ def afiliar_producto(request, producto_id):
 
 
 @login_required
+@datos_afiliacion_requeridos  # ← DECORADOR AGREGADO
 def desafiliar_producto(request, producto_id):
     """
-    Vista para desafiliar al usuario logueado de un producto
+    Vista para desafiliar al usuario logueado de un producto.
+    REQUIERE: datos de afiliación completos.
     """
     if request.method == 'POST':
         producto = get_object_or_404(Producto, id=producto_id)
@@ -169,9 +184,11 @@ def detalle_producto(request, producto_id):
 
 
 @login_required
+@datos_afiliacion_requeridos  # ← DECORADOR AGREGADO
 def mis_links_afiliado(request):
     """
-    Vista para mostrar los links de afiliado del usuario
+    Vista para mostrar los links de afiliado del usuario.
+    REQUIERE: datos de afiliación completos.
     """
     productos_afiliados = request.user.productos_afiliados.filter(activo=True)
 
@@ -197,7 +214,8 @@ def mis_links_afiliado(request):
 @login_required
 def editar_perfil_vendedor(request):
     """
-    Vista para editar el perfil de vendedor/afiliado
+    Vista para editar el perfil de vendedor/afiliado.
+    NO requiere datos completos (pueden estar editando para completarlos).
     """
     # Por ahora, esta es una vista básica
     # Puedes expandirla con un formulario para editar información del usuario
@@ -210,15 +228,18 @@ def editar_perfil_vendedor(request):
 
     context = {
         'user': request.user,
+        'puede_acceder_afiliacion': getattr(request.user, 'datos_afiliacion_completos', False),
     }
 
     return render(request, 'productos/editar_perfil_vendedor.html', context)
 
 
 @login_required
+@datos_afiliacion_requeridos  # ← DECORADOR AGREGADO
 def estadisticas_vendedor(request):
     """
-    Vista para ver estadísticas del afiliado
+    Vista para ver estadísticas del afiliado.
+    REQUIERE: datos de afiliación completos.
     """
     productos_afiliados = request.user.productos_afiliados.all()
 
@@ -250,7 +271,6 @@ def estadisticas_vendedor(request):
 # 🛒 SISTEMA DE CARRITO CON STOCK
 # ============================================================================
 
-@login_required
 @login_required
 def agregar_al_carrito(request, producto_id):
     """Agregar producto al carrito con validación de stock"""
@@ -621,38 +641,6 @@ Tu Tienda
 
 
 # Función original para otros métodos de pago (ya existente)
-def enviar_email_confirmacion(pedido):
-    """
-    Función auxiliar para enviar email de confirmación
-    """
-    from django.core.mail import send_mail
-    from django.conf import settings
-
-    asunto = f'Pedido #{pedido.numero_pedido} - Confirmación'
-    mensaje = f"""
-Hola {pedido.nombre_completo},
-
-¡Gracias por tu compra!
-
-Tu pedido #{pedido.numero_pedido} ha sido recibido y está siendo procesado.
-
-Detalles del pedido:
-- Total: ₲{pedido.total:,.0f}
-- Estado: {pedido.get_estado_display()}
-
-Te contactaremos pronto para coordinar la entrega.
-
-Saludos,
-Tu Tienda
-    """
-
-    send_mail(
-        asunto,
-        mensaje,
-        settings.DEFAULT_FROM_EMAIL,
-        [pedido.email],
-        fail_silently=True,
-    )
 def enviar_email_confirmacion(pedido):
     """
     Función auxiliar para enviar email de confirmación

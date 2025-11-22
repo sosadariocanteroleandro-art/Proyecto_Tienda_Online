@@ -1,248 +1,429 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load static %}
 
-{% block title %}Mi Perfil - Tu Tienda{% endblock %}
+{% block title %}Mi Cuenta - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <!-- Header del Perfil -->
-    <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-2">
-            👤 Mi Perfil
-        </h1>
-        <p class="text-lg text-gray-600">
-            Información de tu cuenta y actividad en la plataforma
-        </p>
-    </div>
+<div class="min-h-screen bg-white">
+    <!-- Include sidebar if you have one -->
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Información Personal -->
-        <div class="lg:col-span-1">
-            <div class="glass-card rounded-2xl shadow-xl p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Información Personal</h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Usuario:</label>
-                        <p class="text-gray-800 font-medium">{{ user.username }}</p>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Email:</label>
-                        <p class="text-gray-800 font-medium">{{ user.email }}</p>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Nombre:</label>
-                        <p class="text-gray-800 font-medium">{{ user.nombre|default:user.first_name }}</p>
-                    </div>
-                    
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Tipo de Cuenta:</label>
-                        <div class="flex items-center space-x-2">
-                            {% if user.es_vendedor %}
-                                {% if user.is_superuser %}
-                                <span class="bg-yellow-100 text-yellow-800 text-sm font-bold px-3 py-1 rounded-full">
-                                    👑 Administrador
-                                </span>
+    <main class="transition-all duration-300">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Header con información del usuario -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">Mi Cuenta</h1>
+                    <p class="text-gray-600 mt-2">Gestiona tu información personal y configuración de la cuenta</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Última actualización</p>
+                    <p class="font-semibold text-gray-800">{{ user.last_login|date:"d M Y, H:i" }}</p>
+                </div>
+            </div>
+
+            <!-- Mensajes de éxito/error -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 border border-green-300 text-green-800{% elif message.tags == 'error' %}bg-red-100 border border-red-300 text-red-800{% else %}bg-blue-100 border border-blue-300 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- ============= INFORMACIÓN BÁSICA DE LA CUENTA ============= -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    👤 Información de la Cuenta
+                </h2>
+
+                <!-- Vista de solo lectura -->
+                <div id="info-view" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Nombre de Usuario:</label>
+                            <p class="text-gray-800 font-medium">{{ user.username }}</p>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Email:</label>
+                            <p class="text-gray-800 font-medium">{{ user.email }}</p>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Nombre:</label>
+                            <p class="text-gray-800 font-medium">{{ user.first_name|default:"No especificado" }}</p>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Apellido:</label>
+                            <p class="text-gray-800 font-medium">{{ user.last_name|default:"No especificado" }}</p>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Tipo de Cuenta:</label>
+                            <div class="flex items-center space-x-2">
+                                {% if user.es_vendedor %}
+                                    {% if user.is_superuser %}
+                                    <span class="bg-yellow-100 text-yellow-800 text-sm font-bold px-3 py-1 rounded-full">
+                                        👑 Administrador
+                                    </span>
+                                    {% else %}
+                                    <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">
+                                        🤝 Vendedor/Afiliado
+                                    </span>
+                                    {% endif %}
                                 {% else %}
-                                <span class="bg-green-100 text-green-800 text-sm font-bold px-3 py-1 rounded-full">
-                                    🤝 Vendedor/Afiliado
+                                <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
+                                    🛒 Comprador
                                 </span>
                                 {% endif %}
-                            {% else %}
-                            <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
-                                🛒 Comprador
-                            </span>
-                            {% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Miembro desde:</label>
+                            <p class="text-gray-800 font-medium">{{ user.date_joined|date:"F Y" }}</p>
                         </div>
                     </div>
-                    
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Miembro desde:</label>
-                        <p class="text-gray-800 font-medium">{{ user.date_joined|date:"F Y" }}</p>
+
+                    <div class="mt-6 pt-4 border-t border-gray-200">
+                        <button id="edit-btn"
+                                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                            ✏️ Editar Información
+                        </button>
                     </div>
-                    
-                    {% if user.es_vendedor and user.fecha_upgrade_vendedor %}
-                    <div>
-                        <label class="text-sm font-semibold text-gray-600">Vendedor desde:</label>
-                        <p class="text-gray-800 font-medium">{{ user.fecha_upgrade_vendedor|date:"F Y" }}</p>
-                    </div>
-                    {% endif %}
+                </div>
+
+                <!-- Formulario de edición (oculto inicialmente) -->
+                <div id="edit-form" class="hidden">
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="editar_perfil">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="username" class="block text-sm font-semibold text-gray-600 mb-2">Nombre de Usuario:</label>
+                                <input type="text"
+                                       id="username"
+                                       name="username"
+                                       value="{{ user.username }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       required>
+                                <p class="text-xs text-gray-500 mt-1">Debe ser único. Solo letras, números, @, ., +, -, _</p>
+                            </div>
+
+                            <div>
+                                <label for="email" class="block text-sm font-semibold text-gray-600 mb-2">Email:</label>
+                                <input type="email"
+                                       id="email"
+                                       name="email"
+                                       value="{{ user.email }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       required>
+                            </div>
+
+                            <div>
+                                <label for="first_name" class="block text-sm font-semibold text-gray-600 mb-2">Nombre:</label>
+                                <input type="text"
+                                       id="first_name"
+                                       name="first_name"
+                                       value="{{ user.first_name }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label for="last_name" class="block text-sm font-semibold text-gray-600 mb-2">Apellido:</label>
+                                <input type="text"
+                                       id="last_name"
+                                       name="last_name"
+                                       value="{{ user.last_name }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-4 pt-4">
+                            <button type="submit"
+                                    class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                💾 Guardar Cambios
+                            </button>
+                            <button type="button"
+                                    id="cancel-btn"
+                                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                ❌ Cancelar
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Botón de upgrade para compradores -->
-                {% if user.es_comprador %}
+                {% if not user.es_vendedor %}
                 <div class="mt-6 pt-4 border-t border-gray-200">
-                    <a href="{% url 'usuarios:upgrade_vendedor' %}" 
+                    <a href="{% url 'usuarios:upgrade_vendedor' %}"
                        class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-4 rounded-xl text-center transition duration-300 transform hover:scale-105 block">
                         🚀 Convertirse en Vendedor
                     </a>
                 </div>
                 {% endif %}
             </div>
-        </div>
 
-        <!-- Estadísticas y Actividad -->
-        <div class="lg:col-span-2">
-            <!-- Estadísticas Generales -->
-            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Estadísticas de Actividad</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Pedidos Realizados -->
-                    <div class="text-center p-4 bg-blue-50 rounded-xl">
-                        <div class="text-3xl font-bold text-blue-600 mb-1">{{ pedidos_count }}</div>
-                        <div class="text-sm text-gray-600">Pedidos Realizados</div>
-                    </div>
-
-                    {% if user.es_vendedor %}
-                    <!-- Productos Afiliados -->
-                    <div class="text-center p-4 bg-green-50 rounded-xl">
-                        <div class="text-3xl font-bold text-green-600 mb-1">{{ productos_afiliados_count|default:0 }}</div>
-                        <div class="text-sm text-gray-600">Productos Afiliados</div>
-                    </div>
-
-                    <!-- Comisiones Ganadas -->
-                    <div class="text-center p-4 bg-purple-50 rounded-xl">
-                        <div class="text-3xl font-bold text-purple-600 mb-1">₲{{ comisiones_totales|default:0|intcomma }}</div>
-                        <div class="text-sm text-gray-600">Comisiones Ganadas</div>
-                    </div>
-                    {% else %}
-                    <!-- Para compradores: Diferentes métricas -->
-                    <div class="text-center p-4 bg-green-50 rounded-xl">
-                        <div class="text-3xl font-bold text-green-600 mb-1">{{ user.productos_afiliados.count }}</div>
-                        <div class="text-sm text-gray-600">Productos Favoritos</div>
-                    </div>
-
-                    <div class="text-center p-4 bg-purple-50 rounded-xl">
-                        <div class="text-3xl font-bold text-purple-600 mb-1">₲0</div>
-                        <div class="text-sm text-gray-600">Potencial de Ganancias</div>
-                        <div class="text-xs text-purple-500 mt-1">¡Conviértete en vendedor!</div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Estadísticas Específicas para Vendedores -->
+            <!-- ============= SECCIÓN DE AFILIACIÓN (solo para vendedores) ============= -->
             {% if user.es_vendedor %}
-            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">💼 Panel de Vendedor</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
-                        <h3 class="font-semibold text-blue-800 mb-2">Ventas Referidas</h3>
-                        <p class="text-2xl font-bold text-blue-600">{{ ventas_referidas_count|default:0 }}</p>
-                        <p class="text-xs text-blue-600 mt-1">Ventas generadas por tus links</p>
+            <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-gray-100">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    🎯 Configuración de Afiliación
+                </h2>
+
+                {% if user.datos_afiliacion_completos %}
+                    <!-- Perfil de afiliación completo -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white text-sm">✓</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-green-800">Perfil de Afiliación Completo</h3>
+                        </div>
+                        <p class="text-green-700">Tu perfil está completo y puedes afiliarte a productos. Puedes ver y gestionar tus enlaces de afiliación desde el panel de vendedor.</p>
+
+                        <div class="mt-4">
+                            <button id="edit-afiliacion-btn"
+                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                ✏️ Editar Datos de Afiliación
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl">
-                        <h3 class="font-semibold text-green-800 mb-2">Comisión Pendiente</h3>
-                        <p class="text-2xl font-bold text-green-600">₲{{ comisiones_totales|default:0|intcomma }}</p>
-                        <p class="text-xs text-green-600 mt-1">Por cobrar</p>
+                    <!-- Vista de datos de afiliación -->
+                    <div id="afiliacion-view" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-semibold text-gray-600">Tipo de Persona:</label>
+                                <p class="text-gray-800 font-medium">
+                                    {% if user.tipo_persona == 'fisica' %}Física
+                                    {% elif user.tipo_persona == 'juridica' %}Jurídica
+                                    {% else %}No especificado{% endif %}
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="text-sm font-semibold text-gray-600">Documento de Identidad:</label>
+                                <p class="text-gray-800 font-medium">{{ user.documento_identidad|default:"No especificado" }}</p>
+                            </div>
+
+                            <div>
+                                <label class="text-sm font-semibold text-gray-600">País de Residencia:</label>
+                                <p class="text-gray-800 font-medium">{{ user.pais_residencia|default:"No especificado" }}</p>
+                            </div>
+                        </div>
+
+                        {% if user.biografia_afiliado %}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Biografía:</label>
+                            <p class="text-gray-800">{{ user.biografia_afiliado }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if user.experiencia_marketing %}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-600">Experiencia en Marketing:</label>
+                            <p class="text-gray-800">{{ user.experiencia_marketing }}</p>
+                        </div>
+                        {% endif %}
                     </div>
-                </div>
+                {% else %}
+                    <!-- Perfil incompleto -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white text-sm">!</span>
+                            </div>
+                            <h3 class="text-lg font-semibold text-yellow-800">Completa tu Perfil de Afiliación</h3>
+                        </div>
+                        <p class="text-yellow-700 mb-4">Para poder afiliarte a productos, necesitas completar la siguiente información:</p>
 
-                <!-- Acciones Rápidas para Vendedores -->
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <a href="{% url 'productos:afiliarme' %}" 
-                       class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
-                        🤝 Afiliarme a Productos
-                    </a>
-                    <a href="{% url 'productos:mis_links_afiliado' %}" 
-                       class="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
-                        🔗 Ver Mis Links
-                    </a>
-                </div>
-            </div>
+                        <div class="bg-white rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-2">Datos requeridos:</h4>
+                            <ul class="text-sm text-gray-600 space-y-1">
+                                <li>• Tipo de persona (física o jurídica)</li>
+                                <li>• Documento de identidad</li>
+                                <li>• País de residencia</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
 
-            <!-- Para Superusuarios -->
-            {% if user.is_superuser %}
-            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">👑 Panel de Administrador</h2>
-                
-                <div class="space-y-3">
-                    <a href="{% url 'productos:crear_producto' %}" 
-                       class="block bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
-                        ➕ Crear Nuevo Producto
-                    </a>
-                    <a href="/admin/" 
-                       class="block bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
-                        ⚙️ Panel de Administración Django
-                    </a>
+                <!-- Formulario de afiliación (oculto inicialmente) -->
+                <div id="afiliacion-form" class="{% if user.datos_afiliacion_completos %}hidden{% endif %}">
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="datos_afiliacion">
+
+                        <!-- Campos obligatorios -->
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                            <h4 class="font-semibold text-red-800 mb-3">Información Obligatoria</h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="tipo_persona" class="block text-sm font-semibold text-gray-600 mb-2">Tipo de Persona: *</label>
+                                    <select id="tipo_persona"
+                                            name="tipo_persona"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            required>
+                                        <option value="">Selecciona una opción</option>
+                                        <option value="fisica" {% if user.tipo_persona == 'fisica' %}selected{% endif %}>Persona Física</option>
+                                        <option value="juridica" {% if user.tipo_persona == 'juridica' %}selected{% endif %}>Persona Jurídica</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label for="documento_identidad" class="block text-sm font-semibold text-gray-600 mb-2">Documento de Identidad: *</label>
+                                    <input type="text"
+                                           id="documento_identidad"
+                                           name="documento_identidad"
+                                           value="{{ user.documento_identidad }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="Cédula, pasaporte, etc."
+                                           required>
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label for="pais_residencia" class="block text-sm font-semibold text-gray-600 mb-2">País de Residencia: *</label>
+                                    <input type="text"
+                                           id="pais_residencia"
+                                           name="pais_residencia"
+                                           value="{{ user.pais_residencia }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="Ej: Paraguay"
+                                           required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos opcionales -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800 mb-3">Información Adicional (Opcional)</h4>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="biografia_afiliado" class="block text-sm font-semibold text-gray-600 mb-2">Biografía/Descripción:</label>
+                                    <textarea id="biografia_afiliado"
+                                              name="biografia_afiliado"
+                                              rows="3"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                              placeholder="Cuéntanos un poco sobre ti...">{{ user.biografia_afiliado }}</textarea>
+                                </div>
+
+                                <div>
+                                    <label for="experiencia_marketing" class="block text-sm font-semibold text-gray-600 mb-2">Experiencia en Marketing:</label>
+                                    <textarea id="experiencia_marketing"
+                                              name="experiencia_marketing"
+                                              rows="3"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                              placeholder="Describe tu experiencia previa en marketing y ventas...">{{ user.experiencia_marketing }}</textarea>
+                                </div>
+
+                                <div>
+                                    <label for="canales_promocion" class="block text-sm font-semibold text-gray-600 mb-2">Canales de Promoción:</label>
+                                    <textarea id="canales_promocion"
+                                              name="canales_promocion"
+                                              rows="2"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                              placeholder="Ej: Redes sociales, blog, email marketing...">{{ user.canales_promocion }}</textarea>
+                                </div>
+
+                                <div>
+                                    <label for="areas_interes" class="block text-sm font-semibold text-gray-600 mb-2">Áreas de Interés:</label>
+                                    <textarea id="areas_interes"
+                                              name="areas_interes"
+                                              rows="2"
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                              placeholder="Ej: Tecnología, salud, educación...">{{ user.areas_interes }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-4 pt-4">
+                            <button type="submit"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                💾 Guardar Configuración de Afiliación
+                            </button>
+                            {% if user.datos_afiliacion_completos %}
+                            <button type="button"
+                                    id="cancel-afiliacion-btn"
+                                    class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                                ❌ Cancelar
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
                 </div>
             </div>
             {% endif %}
-
-            {% else %}
-            <!-- Panel para Compradores -->
-            <div class="glass-card rounded-2xl shadow-xl p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">🛒 Panel de Comprador</h2>
-                
-                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg mb-4">
-                    <h3 class="font-semibold text-blue-800 mb-2">💡 ¿Sabías que puedes ganar dinero?</h3>
-                    <p class="text-blue-700 text-sm mb-3">
-                        Como vendedor/afiliado puedes ganar comisiones promocionando productos que te gustan.
-                    </p>
-                    <a href="{% url 'usuarios:upgrade_vendedor' %}" 
-                       class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg text-sm transition duration-300">
-                        🚀 Saber más
-                    </a>
-                </div>
-
-                <!-- Acciones para compradores -->
-                <div class="space-y-3">
-                    <a href="{% url 'productos:home' %}" 
-                       class="block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
-                        🛍️ Explorar Productos
-                    </a>
-                    <a href="{% url 'productos:ver_carrito' %}" 
-                       class="block bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg text-center transition duration-300">
-                        🛒 Ver Mi Carrito
-                    </a>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Accesos Rápidos para Todos -->
-            <div class="glass-card rounded-2xl shadow-xl p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ Accesos Rápidos</h2>
-                
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <a href="{% url 'productos:mis_pedidos' %}" 
-                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
-                        <div class="text-2xl mb-1">📦</div>
-                        <div class="text-xs font-medium text-gray-700">Mis Pedidos</div>
-                    </a>
-                    
-                    <a href="{% url 'productos:ver_carrito' %}" 
-                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
-                        <div class="text-2xl mb-1">🛒</div>
-                        <div class="text-xs font-medium text-gray-700">Carrito</div>
-                    </a>
-                    
-                    <a href="{% url 'productos:home' %}" 
-                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
-                        <div class="text-2xl mb-1">🛍️</div>
-                        <div class="text-xs font-medium text-gray-700">Productos</div>
-                    </a>
-                    
-                    {% if user.es_vendedor %}
-                    <a href="{% url 'productos:mis_productos' %}" 
-                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
-                        <div class="text-2xl mb-1">🤝</div>
-                        <div class="text-xs font-medium text-gray-700">Mis Productos</div>
-                    </a>
-                    
-                    <a href="{% url 'productos:estadisticas_vendedor' %}" 
-                       class="text-center p-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition duration-300">
-                        <div class="text-2xl mb-1">📊</div>
-                        <div class="text-xs font-medium text-gray-700">Estadísticas</div>
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
         </div>
-    </div>
+    </main>
 </div>
+
+<!-- JavaScript para manejo de formularios -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del formulario de perfil
+    const infoView = document.getElementById('info-view');
+    const editForm = document.getElementById('edit-form');
+    const editBtn = document.getElementById('edit-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    // Elementos del formulario de afiliación
+    const afiliacionView = document.getElementById('afiliacion-view');
+    const afiliacionForm = document.getElementById('afiliacion-form');
+    const editAfiliacionBtn = document.getElementById('edit-afiliacion-btn');
+    const cancelAfiliacionBtn = document.getElementById('cancel-afiliacion-btn');
+
+    // Manejo del formulario de perfil
+    if (editBtn) {
+        editBtn.addEventListener('click', function() {
+            infoView.classList.add('hidden');
+            editForm.classList.remove('hidden');
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            editForm.classList.add('hidden');
+            infoView.classList.remove('hidden');
+        });
+    }
+
+    // Manejo del formulario de afiliación
+    if (editAfiliacionBtn) {
+        editAfiliacionBtn.addEventListener('click', function() {
+            if (afiliacionView) afiliacionView.classList.add('hidden');
+            afiliacionForm.classList.remove('hidden');
+        });
+    }
+
+    if (cancelAfiliacionBtn) {
+        cancelAfiliacionBtn.addEventListener('click', function() {
+            afiliacionForm.classList.add('hidden');
+            if (afiliacionView) afiliacionView.classList.remove('hidden');
+        });
+    }
+});
+</script>
+
+<!-- CSS personalizado -->
+<style>
+/* Efectos hover para botones */
+button:hover {
+    transform: translateY(-2px);
+}
+
+/* Estilos para campos de formulario */
+input:focus, textarea:focus, select:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Transiciones suaves */
+.transition-all {
+    transition: all 0.3s ease;
+}
+</style>
 {% endblock %}

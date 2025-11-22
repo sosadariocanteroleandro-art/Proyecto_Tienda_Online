@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     # Tus aplicaciones personalizadas
     'usuarios',
     'productos',
-    'afiliados',
 
     # Allauth apps
     'allauth',

@@ -1,77 +1,142 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.forms import UserCreationForm
 from .models import CustomUser
 
 
 class CustomUserCreationForm(UserCreationForm):
-    """
-    Formulario personalizado para la creación de un nuevo usuario.
-    Extiende de UserCreationForm para incluir los campos personalizados.
-    """
+    """Formulario para crear nuevos usuarios"""
 
-    # Campo email adicional (NUEVO)
-    email = forms.EmailField(
-        label=_('Correo electrónico'),
-        required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-input', 'placeholder': 'ejemplo@correo.com'}),
-        help_text=_('Requerido. Ingrese un correo electrónico válido.')
+    nombre = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': 'Tu nombre completo'
+        })
     )
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': 'tu@email.com'
+        })
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'nombre', 'email', 'password1', 'password2')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Traducir labels al español
-        self.fields['username'].label = _('Nombre de usuario')
-        self.fields['password1'].label = _('Contraseña')
-        self.fields['password2'].label = _('Confirmar contraseña')
-        self.fields['nombre'].label = _('Nombre completo')
+        # Aplicar clases CSS a todos los campos
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            })
 
-        # Traducir help texts al español
-        self.fields['username'].help_text = _(
-            'Requerido. 150 caracteres o menos. Solo letras, números y los caracteres @/./+/-/_.'
-        )
-        self.fields['password1'].help_text = _(
-            "• Su contraseña no puede ser similar a su información personal.<br>"
-            "• Debe contener al menos 8 caracteres.<br>"
-            "• No puede ser una contraseña comúnmente utilizada.<br>"
-            "• No puede ser enteramente numérica."
-        )
-        self.fields['password2'].help_text = _(
-            "Ingrese la misma contraseña que antes, para verificación."
-        )
-        self.fields['nombre'].help_text = _('Ingrese su nombre completo.')
-        self.fields['email'].help_text = _('Requerido. Ingrese un correo electrónico válido.')
+
+class DatosAfiliacionForm(forms.ModelForm):
+    """
+    Formulario para completar datos de afiliación
+    """
 
     class Meta:
-        # Utiliza el modelo de usuario personalizado que hemos definido
         model = CustomUser
-        # Incluye los campos estándar, más email y nombre
-        fields = ('username', 'email', 'nombre', 'password1', 'password2')
-        # Asegúrate de no incluir campos que puedan ser sensibles o no deseados
+        fields = [
+            'tipo_persona',
+            'documento_identidad',
+            'pais_residencia',
+            'telefono',
+            'experiencia_marketing',
+            'biografia_afiliado',
+            'canales_promocion',
+            'areas_interes'
+        ]
 
-        # Labels en español para los campos del modelo
+        widgets = {
+            'tipo_persona': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            }),
+            'documento_identidad': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Ej: 12345678'
+            }),
+            'pais_residencia': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Ej: Paraguay'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'placeholder': 'Ej: +595 21 123456'
+            }),
+            'experiencia_marketing': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'rows': 3,
+                'placeholder': 'Describe brevemente tu experiencia en marketing o ventas (opcional)'
+            }),
+            'biografia_afiliado': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'rows': 3,
+                'placeholder': 'Cuéntanos sobre ti y por qué quieres ser afiliado (opcional)'
+            }),
+            'canales_promocion': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'rows': 3,
+                'placeholder': 'Facebook, Instagram, WhatsApp, Blog personal, etc. (opcional)'
+            }),
+            'areas_interes': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'rows': 3,
+                'placeholder': 'Productos de belleza, tecnología, cursos online, etc. (opcional)'
+            })
+        }
+
         labels = {
-            'username': _('Nombre de usuario'),
-            'email': _('Correo electrónico'),
-            'nombre': _('Nombre completo'),
+            'tipo_persona': 'Tipo de Persona *',
+            'documento_identidad': 'Documento de Identidad *',
+            'pais_residencia': 'País de Residencia *',
+            'telefono': 'Teléfono',
+            'experiencia_marketing': 'Experiencia en Marketing',
+            'biografia_afiliado': 'Biografía/Presentación Personal',
+            'canales_promocion': 'Canales de Promoción',
+            'areas_interes': 'Áreas de Interés'
         }
+
         help_texts = {
-            'username': _('Requerido. 150 caracteres o menos. Solo letras, números y @/./+/-/_.'),
-            'email': _('Requerido. Ingrese un correo electrónico válido.'),
-            'nombre': _('Ingrese su nombre completo.'),
+            'tipo_persona': 'Selecciona si eres persona física o jurídica',
+            'documento_identidad': 'Tu número de cédula, RUC, pasaporte, etc.',
+            'pais_residencia': 'País donde resides actualmente',
+            'telefono': 'Número de contacto (opcional pero recomendado)',
+            'experiencia_marketing': 'Ayuda a que los productores confíen más en ti',
+            'biografia_afiliado': 'Preséntate de manera profesional',
+            'canales_promocion': '¿Dónde planeas promocionar los productos?',
+            'areas_interes': '¿Qué tipo de productos te interesa más?'
         }
 
-    def clean_email(self):
-        """Validación personalizada para verificar que el email no exista"""
-        email = self.cleaned_data.get('email')
-        if CustomUser.objects.filter(email=email).exists():
-            raise forms.ValidationError(_('Este correo electrónico ya está registrado.'))
-        return email
+    def clean(self):
+        """
+        Validación personalizada del formulario
+        """
+        cleaned_data = super().clean()
 
+        # Validar campos obligatorios
+        campos_obligatorios = ['tipo_persona', 'documento_identidad', 'pais_residencia']
 
-# Si necesitas el UserChangeForm también, aquí está
-class CustomUserChangeForm(UserChangeForm):
-    class Meta:
-        model = CustomUser
-        fields = ('username', 'email', 'nombre')
+        for campo in campos_obligatorios:
+            if not cleaned_data.get(campo):
+                self.add_error(campo, 'Este campo es obligatorio.')
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        """
+        Guardar y marcar datos como completos si cumple requisitos
+        """
+        user = super().save(commit=False)
+
+        if commit:
+            # Verificar si se completaron los datos mínimos
+            user.completar_datos_afiliacion()
+            user.save()
+
+        return user

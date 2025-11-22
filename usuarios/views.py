@@ -4,8 +4,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
-from .forms import CustomUserCreationForm
-from productos.models import Pedido, Producto  # ← CORREGIDO: Ambos vienen de productos
+from .forms import CustomUserCreationForm, DatosAfiliacionForm  # ← NUEVO
+from productos.models import Pedido, Producto
 from django.shortcuts import render
 from django.conf import settings
 from productos.models import Producto
@@ -247,29 +247,84 @@ def upgrade_a_vendedor(request):
     return render(request, 'usuarios/upgrade_vendedor.html', context)
 
 
+# usuarios/views.py - Función actualizada para perfil_usuario
+
 @login_required
 def perfil_usuario(request):
-    """
-    Vista del perfil del usuario con información sobre su cuenta
-    """
-    context = {
-        'user': request.user,
-        'pedidos_count': Pedido.objects.filter(usuario=request.user).exclude(estado='PENDIENTE').count(),
-    }
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
 
-    # Estadísticas adicionales para vendedores
-    if request.user.es_vendedor():
-        ventas_como_afiliado = Pedido.objects.filter(
-            afiliado_referido=request.user
-        ).exclude(estado='PENDIENTE')
+        if form_type == 'editar_perfil':
+            # Manejo del formulario de información básica
+            username = request.POST.get('username', '').strip()
+            email = request.POST.get('email', '').strip()
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
 
-        context.update({
-            'productos_afiliados_count': request.user.productos_afiliados.count(),
-            'ventas_referidas_count': ventas_como_afiliado.count(),
-            'comisiones_totales': sum(v.comision_total for v in ventas_como_afiliado),
-        })
+            # Validaciones
+            errors = []
 
-    return render(request, 'usuarios/perfil.html', context)
+            # Validar username
+            if not username:
+                errors.append("El nombre de usuario es obligatorio.")
+            elif username != request.user.username and User.objects.filter(username=username).exists():
+                errors.append("Este nombre de usuario ya está en uso.")
+            elif not re.match(r'^[\w.@+-]+$', username):
+                errors.append("El nombre de usuario solo puede contener letras, números y los caracteres @, ., +, -, _")
+
+            # Validar email
+            if not email:
+                errors.append("El email es obligatorio.")
+            elif email != request.user.email and User.objects.filter(email=email).exists():
+                errors.append("Este email ya está registrado.")
+
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+            else:
+                # Actualizar información básica
+                request.user.username = username
+                request.user.email = email
+                request.user.first_name = first_name
+                request.user.last_name = last_name
+                request.user.save()
+
+                messages.success(request, '✅ Información de la cuenta actualizada exitosamente.')
+                return redirect('usuarios:perfil')
+
+        elif form_type == 'datos_afiliacion':
+            # Manejo del formulario de datos de afiliación
+            tipo_persona = request.POST.get('tipo_persona', '').strip()
+            documento_identidad = request.POST.get('documento_identidad', '').strip()
+            pais_residencia = request.POST.get('pais_residencia', '').strip()
+            experiencia_marketing = request.POST.get('experiencia_marketing', '').strip()
+            biografia_afiliado = request.POST.get('biografia_afiliado', '').strip()
+            canales_promocion = request.POST.get('canales_promocion', '').strip()
+            areas_interes = request.POST.get('areas_interes', '').strip()
+
+            # Validar campos obligatorios
+            if not tipo_persona or not documento_identidad or not pais_residencia:
+                messages.error(request,
+                               '❌ Debes completar todos los campos obligatorios (tipo de persona, documento de identidad y país de residencia).')
+            else:
+                # Actualizar datos de afiliación
+                request.user.tipo_persona = tipo_persona
+                request.user.documento_identidad = documento_identidad
+                request.user.pais_residencia = pais_residencia
+                request.user.experiencia_marketing = experiencia_marketing
+                request.user.biografia_afiliado = biografia_afiliado
+                request.user.canales_promocion = canales_promocion
+                request.user.areas_interes = areas_interes
+                request.user.datos_afiliacion_completos = True  # Marcar como completo
+                request.user.save()
+
+                messages.success(request,
+                                 '✅ Datos de afiliación guardados exitosamente. ¡Ya puedes afiliarte a productos!')
+                return redirect('usuarios:perfil')
+
+    return render(request, 'usuarios/perfil.html', {
+        'user': request.user
+    })
 
 
 # ======== MANEJADOR PARA GOOGLE OAUTH ========
@@ -389,3 +444,170 @@ def ir_a_negocio(request):
     Redirige al dashboard de negocio (home.html). Requiere login.
     """
     return redirect('usuarios:home')
+
+
+# usuarios/views.py - AGREGAR ESTAS FUNCIONES AL FINAL
+
+import re
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+@login_required
+def mi_saldo(request):
+    """
+    Vista para gestionar saldo, comisiones y métodos de retiro
+    """
+    if not request.user.es_vendedor():
+        messages.error(request, 'Solo los vendedores pueden acceder a esta sección.')
+        return redirect('usuarios:home')
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'datos_bancarios':
+            # Manejo del formulario de datos bancarios
+            tipo_retiro = request.POST.get('tipo_retiro', '').strip()
+
+            # Validar que seleccionó un tipo
+            if not tipo_retiro:
+                messages.error(request, '❌ Debes seleccionar un método de retiro.')
+                return redirect('usuarios:mi_saldo')
+
+            # Actualizar tipo de retiro
+            request.user.tipo_retiro = tipo_retiro
+
+            if tipo_retiro == 'banco':
+                # Datos bancarios
+                banco_nombre = request.POST.get('banco_nombre', '').strip()
+                tipo_cuenta = request.POST.get('tipo_cuenta', '').strip()
+                numero_cuenta = request.POST.get('numero_cuenta', '').strip()
+                titular_cuenta = request.POST.get('titular_cuenta', '').strip()
+
+                # Validaciones para banco
+                if not all([banco_nombre, tipo_cuenta, numero_cuenta, titular_cuenta]):
+                    messages.error(request, '❌ Todos los campos bancarios son obligatorios.')
+                    return redirect('usuarios:mi_saldo')
+
+                # Guardar datos bancarios
+                request.user.banco_nombre = banco_nombre
+                request.user.tipo_cuenta = tipo_cuenta
+                request.user.numero_cuenta = numero_cuenta
+                request.user.titular_cuenta = titular_cuenta
+                request.user.numero_celular_retiro = ''  # Limpiar datos de billetera
+                request.user.nombre_titular_billetera = ''
+
+            else:
+                # Billeteras digitales
+                numero_celular = request.POST.get('numero_celular_retiro', '').strip()
+                nombre_titular = request.POST.get('nombre_titular_billetera', '').strip()
+
+                # Validaciones para billetera
+                if not numero_celular or not nombre_titular:
+                    messages.error(request, '❌ El número de celular y nombre del titular son obligatorios.')
+                    return redirect('usuarios:mi_saldo')
+
+                # Guardar datos de billetera
+                request.user.numero_celular_retiro = numero_celular
+                request.user.nombre_titular_billetera = nombre_titular
+                request.user.banco_nombre = ''  # Limpiar datos bancarios
+                request.user.tipo_cuenta = ''
+                request.user.numero_cuenta = ''
+                request.user.titular_cuenta = ''
+
+            # Marcar datos de retiro como completos
+            request.user.datos_retiro_completos = True
+            request.user.save()
+
+            messages.success(request, '✅ Método de retiro configurado exitosamente.')
+            return redirect('usuarios:mi_saldo')
+
+    # Calcular estadísticas de comisiones
+    from productos.models import Pedido
+
+    # Comisiones de ventas generadas como afiliado
+    ventas_como_afiliado = Pedido.objects.filter(
+        afiliado_referido=request.user,
+        estado__in=['CONFIRMADO', 'ENVIADO', 'ENTREGADO']
+    )
+
+    total_ventas_generadas = ventas_como_afiliado.count()
+    total_comisiones_ganadas = sum(venta.comision_total for venta in ventas_como_afiliado)
+
+    # Actualizar el saldo disponible si es necesario
+    if request.user.saldo_disponible != total_comisiones_ganadas - request.user.saldo_retirado:
+        request.user.saldo_disponible = total_comisiones_ganadas - request.user.saldo_retirado
+        request.user.save()
+
+    # Últimas ventas como afiliado
+    ultimas_ventas = ventas_como_afiliado.order_by('-fecha_creacion')[:10]
+
+    context = {
+        'user': request.user,
+        'total_ventas_generadas': total_ventas_generadas,
+        'total_comisiones_ganadas': total_comisiones_ganadas,
+        'ultimas_ventas': ultimas_ventas,
+        'puede_retirar': request.user.puede_solicitar_retiro(),
+    }
+
+    return render(request, 'usuarios/mi_saldo.html', context)
+
+
+@login_required
+def solicitar_retiro(request):
+    """
+    Vista para solicitar retiro de saldo
+    """
+    if not request.user.es_vendedor():
+        messages.error(request, 'Solo los vendedores pueden solicitar retiros.')
+        return redirect('usuarios:home')
+
+    if not request.user.puede_solicitar_retiro():
+        if not request.user.datos_retiro_completos:
+            messages.error(request, '❌ Debes configurar tu método de retiro antes de solicitar un retiro.')
+        elif request.user.saldo_disponible < request.user.retiro_minimo:
+            messages.error(request, f'❌ El monto mínimo para retiro es ₲{request.user.retiro_minimo:,.0f}')
+        elif request.user.retiros_pendientes:
+            messages.error(request, '❌ Ya tienes una solicitud de retiro pendiente.')
+        else:
+            messages.error(request, '❌ No cumples los requisitos para solicitar un retiro.')
+        return redirect('usuarios:mi_saldo')
+
+    if request.method == 'POST':
+        try:
+            monto = float(request.POST.get('monto', 0))
+        except ValueError:
+            monto = 0
+
+        # Validaciones
+        if monto <= 0:
+            messages.error(request, '❌ El monto debe ser mayor a 0.')
+            return redirect('usuarios:mi_saldo')
+
+        if monto < request.user.retiro_minimo:
+            messages.error(request, f'❌ El monto mínimo para retiro es ₲{request.user.retiro_minimo:,.0f}')
+            return redirect('usuarios:mi_saldo')
+
+        if monto > request.user.saldo_disponible:
+            messages.error(request, '❌ No tienes suficiente saldo disponible.')
+            return redirect('usuarios:mi_saldo')
+
+        # Crear solicitud de retiro (este modelo lo crearemos después si lo necesitas)
+        # Por ahora, simular que se procesó
+        messages.success(request,
+                         f'✅ Solicitud de retiro por ₲{monto:,.0f} enviada exitosamente. Te contactaremos pronto.')
+
+        # Marcar que tiene retiros pendientes
+        request.user.retiros_pendientes = True
+        request.user.save()
+
+        return redirect('usuarios:mi_saldo')
+
+    context = {
+        'user': request.user,
+        'saldo_disponible': request.user.saldo_disponible,
+        'retiro_minimo': request.user.retiro_minimo,
+    }
+
+    return render(request, 'usuarios/solicitar_retiro.html', context)

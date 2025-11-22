@@ -274,6 +274,118 @@ class Pedido(models.Model):
                 comision_total_field=comision  # ✅ Usar el campo correcto
             )
 
+            # productos/models.py - AGREGAR ESTOS CAMPOS AL MODELO PRODUCTO
+
+            # ================ CAMPOS PARA COMISIONES (AGREGAR AL MODELO PRODUCTO) ================
+
+            # Sistema de comisiones por producto
+            comision_afiliado = models.DecimalField(
+                max_digits=5,
+                decimal_places=2,
+                default=15.00,  # 15% por defecto
+                verbose_name="Comisión para Afiliados (%)",
+                help_text="Porcentaje de comisión que recibirán los afiliados por vender este producto"
+            )
+
+            comision_minima = models.DecimalField(
+                max_digits=5,
+                decimal_places=2,
+                default=5.00,
+                verbose_name="Comisión Mínima (%)"
+            )
+
+            comision_maxima = models.DecimalField(
+                max_digits=5,
+                decimal_places=2,
+                default=50.00,
+                verbose_name="Comisión Máxima (%)"
+            )
+
+            # Control de comisiones
+            permite_modificar_comision = models.BooleanField(
+                default=True,
+                verbose_name="Permite Modificar Comisión",
+                help_text="Permite que los administradores modifiquen la comisión de este producto"
+            )
+
+            comision_especial_activa = models.BooleanField(
+                default=False,
+                verbose_name="Comisión Especial Activa",
+                help_text="Indica si hay una comisión especial temporal para este producto"
+            )
+
+            fecha_inicio_comision_especial = models.DateTimeField(
+                null=True,
+                blank=True,
+                verbose_name="Inicio Comisión Especial"
+            )
+
+            fecha_fin_comision_especial = models.DateTimeField(
+                null=True,
+                blank=True,
+                verbose_name="Fin Comisión Especial"
+            )
+
+            comision_especial = models.DecimalField(
+                max_digits=5,
+                decimal_places=2,
+                default=0.00,
+                verbose_name="Comisión Especial (%)",
+                help_text="Comisión temporal especial para promociones"
+            )
+
+            # MÉTODOS ADICIONALES PARA AGREGAR AL MODELO PRODUCTO
+            def get_comision_actual(self):
+                """
+                Retorna la comisión actual del producto, considerando promociones especiales
+                """
+                from django.utils import timezone
+
+                # Verificar si hay comisión especial activa
+                if (self.comision_especial_activa and
+                        self.fecha_inicio_comision_especial and
+                        self.fecha_fin_comision_especial and
+                        self.fecha_inicio_comision_especial <= timezone.now() <= self.fecha_fin_comision_especial):
+                    return self.comision_especial
+
+                return self.comision_afiliado
+
+            def calcular_comision_monto(self, precio_venta=None):
+                """
+                Calcula el monto de comisión en guaraníes para un precio de venta
+                """
+                precio = precio_venta or self.precio
+                comision_porcentaje = self.get_comision_actual()
+                return (precio * comision_porcentaje) / 100
+
+            def is_comision_especial_vigente(self):
+                """
+                Verifica si la comisión especial está vigente
+                """
+                from django.utils import timezone
+
+                if not self.comision_especial_activa:
+                    return False
+
+                if not self.fecha_inicio_comision_especial or not self.fecha_fin_comision_especial:
+                    return False
+
+                now = timezone.now()
+                return self.fecha_inicio_comision_especial <= now <= self.fecha_fin_comision_especial
+
+            def get_comision_display(self):
+                """
+                Retorna el display formateado de la comisión
+                """
+                if self.is_comision_especial_vigente():
+                    return f"{self.comision_especial}% (ESPECIAL)"
+                return f"{self.comision_afiliado}%"
+
+            class Meta:
+                verbose_name = "Producto"
+                verbose_name_plural = "Productos"
+                ordering = ['-fecha_creacion']
+
 
 class ItemPedido(models.Model):
     """
